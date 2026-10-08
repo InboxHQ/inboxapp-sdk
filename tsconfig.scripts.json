@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": ["scripts/**/*.ts", "test/**/*.ts", "examples/**/*.ts", "*.config.ts"],
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "rewriteRelativeImportExtensions": false,
+    "customConditions": ["bun"],
+    "outDir": "./.scripts-types",
+    "rootDir": ".",
+    "tsBuildInfoFile": "./.scripts-types/tsconfig.scripts.tsbuildinfo"
+  },
+  "references": [{ "path": "./tsconfig.src.json" }]
+}

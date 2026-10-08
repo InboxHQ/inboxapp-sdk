@@ -1,0 +1,25 @@
+// Project tasks configuration. See https://zed.dev/docs/tasks for documentation.
+[
+  {
+    "label": "Fix",
+    "command": "bun fix",
+    "reveal": "never",
+    "hide": "on_success"
+  },
+  {
+    "label": "Generate Inbox ID",
+    "command": "echo \"import {genId} from '@inbox/lib/id'; console.log(genId())\" | bun run - | pbcopy",
+    "reveal": "never",
+    "hide": "on_success"
+  },
+  {
+    "label": "Portal dev",
+    "command": "bun d portal",
+    "reveal": "always"
+  },
+  {
+    "label": "gt pr",
+    "command": "gt pr",
+    "reveal": "never"
+  }
+]

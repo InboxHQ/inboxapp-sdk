@@ -1,0 +1,85 @@
+{
+  "format_on_save": "on",
+  "lsp": {
+    "vtsls": {
+      "settings": {
+        "typescript.preferences.autoImportFileExcludePatterns": ["repos/**"],
+        "javascript.preferences.autoImportFileExcludePatterns": ["repos/**"]
+      }
+    },
+    "typescript-language-server": {
+      "initialization_options": {
+        "preferences": {
+          "autoImportFileExcludePatterns": ["repos/**"]
+        }
+      }
+    },
+    "effect-tsgo": {
+      "settings": {
+        "package_version": "0.51.1"
+      }
+    }
+  },
+  "formatter": [{ "code_action": "source.fixAll.oxc" }, { "language_server": { "name": "oxfmt" } }],
+  "languages": {
+    "JavaScript": {
+      "language_servers": [
+        "oxlint",
+        "oxfmt",
+        "effect-tsgo",
+        "!biome",
+        "!tsgo",
+        "!typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+        "!eslint",
+        "!tailwindcss-language-server",
+        "..."
+      ]
+    },
+    "TypeScript": {
+      "language_servers": [
+        "oxlint",
+        "oxfmt",
+        "effect-tsgo",
+        "!biome",
+        "!tsgo",
+        "!typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+        "!eslint",
+        "!tailwindcss-language-server",
+        "..."
+      ]
+    },
+    "TSX": {
+      "language_servers": [
+        "oxlint",
+        "oxfmt",
+        "effect-tsgo",
+        "!biome",
+        "!tsgo",
+        "!typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+        "!tailwindcss-language-server",
+        "!eslint",
+        "..."
+      ]
+    }
+  },
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/.svn",
+    "**/.hg",
+    "**/.jj",
+    "**/CVS",
+    "**/.DS_Store",
+    "**/Thumbs.db",
+    "**/.classpath",
+    "**/.settings",
+    "packages/drizzle/drizzle/meta",
+    "repos",
+    "**/node_modules"
+  ]
+}

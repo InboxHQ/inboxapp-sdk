@@ -1,0 +1,62 @@
+{
+  "name": "@inboxapp/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for the Inboxapp API v2, generated from its OpenAPI document.",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "bun": "./src/index.ts",
+      "default": "./lib/index.js"
+    },
+    "./effect": {
+      "types": "./lib/effect/index.d.ts",
+      "bun": "./src/effect/index.ts",
+      "default": "./lib/effect/index.js"
+    },
+    "./webhooks": {
+      "types": "./lib/webhooks.d.ts",
+      "bun": "./src/webhooks.ts",
+      "default": "./lib/webhooks.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "convert": "bun scripts/convert.ts",
+    "generate": "bun scripts/convert.ts && bun scripts/generate.ts",
+    "generate:check": "bun run generate && git diff --exit-code -- .generated-specs src",
+    "type-check": "tsc -b",
+    "test": "bun --bun vitest run",
+    "check": "oxlint . --disable-nested-config && oxfmt --check .",
+    "fix": "oxlint . --fix --disable-nested-config && oxfmt .",
+    "prepare": "effect-tsgo patch --typescript --oxlint"
+  },
+  "devDependencies": {
+    "@effect/tsgo": "0.51.1",
+    "@types/node": "26.2.0",
+    "effect": "^4.0.0",
+    "lefthook": "^2.1.0",
+    "oxfmt": "^0.71.0",
+    "oxlint": "1.87.0",
+    "oxlint-tsgolint": "7.0.2003",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.8"
+  },
+  "peerDependencies": {
+    "effect": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "effect": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "bun@1.4.2"
+}

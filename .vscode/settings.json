@@ -1,0 +1,30 @@
+{
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.format.oxc": "explicit",
+    "source.fixAll.oxc": "explicit"
+  },
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  "tailwindCSS.experimental.configFile": "./packages/ui/src/globals.css",
+  "typescript.preferences.autoImportFileExcludePatterns": ["repos/**"],
+  "javascript.preferences.autoImportFileExcludePatterns": ["repos/**"],
+  "files.watcherExclude": {
+    "repos/**": true
+  },
+  "search.exclude": {
+    "repos/**": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[xml]": {
+    "editor.defaultFormatter": "DotJoshJohnson.xml"
+  },
+  "js/ts.tsdk.additionalLocations": ["./node_modules/typescript/bin"],
+  "js/ts.experimental.useTsgo": true
+}

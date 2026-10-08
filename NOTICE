@@ -1,0 +1,13 @@
+@inboxapp/sdk
+Copyright (c) 2026 Inboxapp.
+
+The code generation pipeline follows the design of distilled
+(https://github.com/alchemy-run/distilled), Copyright 2026 Functionless Corp.,
+licensed under the Apache License, Version 2.0.
+
+One file is adapted from distilled's source and stays under the Apache License,
+Version 2.0, with the changes described in its header:
+
+  src/effect/schema.ts   from packages/core/src/schema.ts
+
+A copy of that license is in licenses/distilled-Apache-2.0.txt.

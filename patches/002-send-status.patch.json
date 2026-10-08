@@ -1,0 +1,43 @@
+{
+  "description": "POST /messages answers 201 for a new send and 200 for a replay of an Idempotency-Key, with the same SendResult body, so the status is the only way to tell them apart. This gives the operation its own response shape: SendResult plus `httpStatus`, bound to the response status code.",
+  "patches": [
+    {
+      "op": "add",
+      "path": "/shapes/com.inboxapp.api#MessagesSendResponse",
+      "value": {
+        "type": "structure",
+        "members": {
+          "message": {
+            "target": "com.inboxapp.api#Message",
+            "traits": { "smithy.api#required": {} }
+          },
+          "thread": {
+            "target": "com.inboxapp.api#Thread",
+            "traits": {
+              "smithy.api#required": {},
+              "smithy.api#documentation": "The thread the message landed in, which a concurrent send may have created. Adopt it."
+            }
+          },
+          "httpStatus": {
+            "target": "smithy.api#Integer",
+            "traits": {
+              "smithy.api#required": {},
+              "smithy.api#httpResponseCode": {},
+              "smithy.api#documentation": "`201` for a new send, `200` for a replay of an `Idempotency-Key`."
+            }
+          }
+        }
+      }
+    },
+    {
+      "op": "test",
+      "path": "/shapes/com.inboxapp.api#MessagesSend/output/target",
+      "value": "com.inboxapp.api#SendResult"
+    },
+    {
+      "op": "replace",
+      "path": "/shapes/com.inboxapp.api#MessagesSend/output/target",
+      "value": "com.inboxapp.api#MessagesSendResponse"
+    }
+  ]
+}

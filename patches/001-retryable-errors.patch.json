@@ -1,0 +1,14 @@
+{
+  "description": "The OpenAPI document does not say which errors are safe to retry, so convert marks every 429 and 5xx error retryable by status. Two codes differ, per the public error reference (\"What to retry\"): `sendUnconfirmed` (502) must never be retried because the platform may have delivered the message, and `sendInProgress` (409) clears on its own when retried with the same Idempotency-Key.",
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/shapes/com.inboxapp.api#SendUnconfirmed/traits/smithy.api#retryable"
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.inboxapp.api#SendInProgress/traits/smithy.api#retryable",
+      "value": {}
+    }
+  ]
+}
