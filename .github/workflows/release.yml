@@ -40,6 +40,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          # `changeset version` looks up the commit that added each changeset and
+          # deepens a shallow clone to find it, which fails without credentials.
+          fetch-depth: 0
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
