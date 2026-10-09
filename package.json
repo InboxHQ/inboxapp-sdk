@@ -2,9 +2,15 @@
   "name": "@inboxapp/sdk",
   "version": "0.1.0",
   "description": "TypeScript SDK for the Inboxapp API v2, generated from its OpenAPI document.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/InboxHQ/inboxapp-sdk.git"
+  },
   "files": [
     "lib",
-    "src"
+    "src",
+    "NOTICE",
+    "licenses"
   ],
   "type": "module",
   "sideEffects": false,
@@ -25,6 +31,9 @@
       "default": "./lib/webhooks.js"
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -b",
     "convert": "bun scripts/convert.ts",
@@ -37,6 +46,7 @@
     "prepare": "effect-tsgo patch --typescript --oxlint"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.3",
     "@effect/tsgo": "0.51.1",
     "@types/node": "26.2.0",
     "effect": "^4.0.0",
