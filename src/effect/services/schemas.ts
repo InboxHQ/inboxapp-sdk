@@ -31,6 +31,7 @@ export const PlatformInfoLimits = /*@__PURE__*/ S.suspend(() =>
     mediaCount: S.NullOr(S.Number),
     mediaBytes: S.NullOr(S.Number),
     mediaTypes: S.NullOr(PlatformInfoLimitsMediaTypes),
+    connectNoteCharacters: S.NullOr(S.Number),
   }),
 ).annotate({ identifier: "PlatformInfoLimits" }) as any as S.Schema<M.PlatformInfoLimits>;
 
@@ -57,6 +58,7 @@ export const PlatformInfoMutationWindows = /*@__PURE__*/ S.suspend(() =>
     "message:react": S.optional(S.Number),
     "message:reply": S.optional(S.Number),
     "message:forward": S.optional(S.Number),
+    "message:answer": S.optional(S.Number),
     "media:image": S.optional(S.Number),
     "media:video": S.optional(S.Number),
     "media:gif": S.optional(S.Number),
@@ -64,6 +66,7 @@ export const PlatformInfoMutationWindows = /*@__PURE__*/ S.suspend(() =>
     "media:audio": S.optional(S.Number),
     "thread:typing:send": S.optional(S.Number),
     "thread:typing:receive": S.optional(S.Number),
+    "thread:seen:receive": S.optional(S.Number),
     "thread:message-requests": S.optional(S.Number),
     "thread:delete:remote": S.optional(S.Number),
     "directory:typeahead": S.optional(S.Number),
@@ -73,6 +76,10 @@ export const PlatformInfoMutationWindows = /*@__PURE__*/ S.suspend(() =>
     "thread:read:mutate": S.optional(S.Number),
     "profile:follow": S.optional(S.Number),
     "profile:unfollow": S.optional(S.Number),
+    "profile:connect": S.optional(S.Number),
+    "profile:connect:note": S.optional(S.Number),
+    "profile:resolve:id": S.optional(S.Number),
+    "profile:resolve:username": S.optional(S.Number),
   }),
 ).annotate({
   identifier: "PlatformInfoMutationWindows",
@@ -125,10 +132,15 @@ export const InvalidRequestDetailsIssuesItem = /*@__PURE__*/ S.suspend(() =>
 
 export type InvalidRequestDetailsIssuesItemPathItem = M.InvalidRequestDetailsIssuesItemPathItem;
 export const InvalidRequestDetailsIssuesItemPathItem = /*@__PURE__*/ S.suspend(() =>
-  S.Union([S.String, S.Number]),
+  S.Union([S.String, S.Number, InvalidRequestDetailsIssuesItemPathItemString3]),
 ).annotate({
   identifier: "InvalidRequestDetailsIssuesItemPathItem",
 }) as any as S.Schema<M.InvalidRequestDetailsIssuesItemPathItem>;
+
+export type InvalidRequestDetailsIssuesItemPathItemString3 =
+  M.InvalidRequestDetailsIssuesItemPathItemString3;
+export const InvalidRequestDetailsIssuesItemPathItemString3 =
+  /*@__PURE__*/ S.String as any as S.Schema<M.InvalidRequestDetailsIssuesItemPathItemString3>;
 
 export type RateLimitedDetails = M.RateLimitedDetails;
 export const RateLimitedDetails = /*@__PURE__*/ S.suspend(() =>
@@ -253,7 +265,7 @@ export const Contact = /*@__PURE__*/ S.suspend(() =>
     statusId: S.NullOr(S.String),
     tagIds: S.Array(S.String),
     notes: S.NullOr(S.String),
-    valuation: S.NullOr(S.Number),
+    valuation: S.NullOr(ContactValuation),
     assigneeId: S.NullOr(S.String),
     createdAt: S.String,
     updatedAt: S.String,
@@ -280,18 +292,64 @@ export const Profile = /*@__PURE__*/ S.suspend(() =>
     verified: S.Boolean,
     isOrganization: S.Boolean,
     isProtected: S.Boolean,
-    followerCount: S.NullOr(S.Number),
-    followingCount: S.NullOr(S.Number),
-    postCount: S.NullOr(S.Number),
-    engagementCount: S.NullOr(S.Number),
-    listedCount: S.NullOr(S.Number),
+    followerCount: S.NullOr(ProfileFollowerCount),
+    followingCount: S.NullOr(ProfileFollowingCount),
+    postCount: S.NullOr(ProfilePostCount),
+    engagementCount: S.NullOr(ProfileEngagementCount),
+    listedCount: S.NullOr(ProfileListedCount),
     accountStatus: ProfileAccountStatus,
     platformCreatedAt: S.NullOr(S.String),
     profileUrl: S.NullOr(S.String),
     updatedAt: S.String,
     platformData: ProfilePlatformData,
+    relationships: S.Array(Relationship),
   }),
 ).annotate({ identifier: "Profile" }) as any as S.Schema<M.Profile>;
+
+export type ProfileFollowerCount = M.ProfileFollowerCount;
+export const ProfileFollowerCount = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, ProfileFollowerCountString]),
+).annotate({ identifier: "ProfileFollowerCount" }) as any as S.Schema<M.ProfileFollowerCount>;
+
+export type ProfileFollowerCountString = M.ProfileFollowerCountString;
+export const ProfileFollowerCountString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.ProfileFollowerCountString>;
+
+export type ProfileFollowingCount = M.ProfileFollowingCount;
+export const ProfileFollowingCount = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, ProfileFollowingCountString]),
+).annotate({ identifier: "ProfileFollowingCount" }) as any as S.Schema<M.ProfileFollowingCount>;
+
+export type ProfileFollowingCountString = M.ProfileFollowingCountString;
+export const ProfileFollowingCountString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.ProfileFollowingCountString>;
+
+export type ProfilePostCount = M.ProfilePostCount;
+export const ProfilePostCount = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, ProfilePostCountString]),
+).annotate({ identifier: "ProfilePostCount" }) as any as S.Schema<M.ProfilePostCount>;
+
+export type ProfilePostCountString = M.ProfilePostCountString;
+export const ProfilePostCountString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.ProfilePostCountString>;
+
+export type ProfileEngagementCount = M.ProfileEngagementCount;
+export const ProfileEngagementCount = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, ProfileEngagementCountString]),
+).annotate({ identifier: "ProfileEngagementCount" }) as any as S.Schema<M.ProfileEngagementCount>;
+
+export type ProfileEngagementCountString = M.ProfileEngagementCountString;
+export const ProfileEngagementCountString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.ProfileEngagementCountString>;
+
+export type ProfileListedCount = M.ProfileListedCount;
+export const ProfileListedCount = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, ProfileListedCountString]),
+).annotate({ identifier: "ProfileListedCount" }) as any as S.Schema<M.ProfileListedCount>;
+
+export type ProfileListedCountString = M.ProfileListedCountString;
+export const ProfileListedCountString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.ProfileListedCountString>;
 
 export type ProfileAccountStatus = M.ProfileAccountStatus;
 export const ProfileAccountStatus =
@@ -299,7 +357,7 @@ export const ProfileAccountStatus =
 
 export type ProfilePlatformData = M.ProfilePlatformData;
 export const ProfilePlatformData = /*@__PURE__*/ S.suspend(() =>
-  S.Union([ProfilePlatformDataTwitter, ProfilePlatformDataOther]),
+  S.Union([ProfilePlatformDataTwitter, ProfilePlatformDataLinkedin, ProfilePlatformDataOther]),
 ).annotate({ identifier: "ProfilePlatformData" }) as any as S.Schema<M.ProfilePlatformData>;
 
 export type ProfilePlatformDataTwitter = M.ProfilePlatformDataTwitter;
@@ -337,6 +395,82 @@ export const ProfilePlatformDataTwitterUrlEntitiesItem = /*@__PURE__*/ S.suspend
   identifier: "ProfilePlatformDataTwitterUrlEntitiesItem",
 }) as any as S.Schema<M.ProfilePlatformDataTwitterUrlEntitiesItem>;
 
+export type ProfilePlatformDataLinkedin = M.ProfilePlatformDataLinkedin;
+export const ProfilePlatformDataLinkedin = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    _tag: S.Literal("linkedin"),
+    profileUrn: S.optional(S.NullOr(S.String)),
+    kind: S.optional(S.NullOr(ProfilePlatformDataLinkedinKind)),
+    memberBadge: S.optional(S.NullOr(ProfilePlatformDataLinkedinMemberBadge)),
+    bannerUrl: S.optional(S.NullOr(S.String)),
+    bannerSize: S.optional(S.NullOr(ProfilePlatformDataLinkedinBannerSize)),
+    hydratedAt: S.optional(S.NullOr(S.String)),
+    imageAssetId: S.optional(S.NullOr(S.String)),
+    connectionsCount: S.optional(S.NullOr(S.Number)),
+    currentRole: S.optional(S.NullOr(S.String)),
+    currentRoleStart: S.optional(S.NullOr(ProfilePlatformDataLinkedinCurrentRoleStart)),
+    currentCompanyName: S.optional(S.NullOr(S.String)),
+    currentCompanyUrn: S.optional(S.NullOr(S.String)),
+    topSchoolName: S.optional(S.NullOr(S.String)),
+    topSchoolUrn: S.optional(S.NullOr(S.String)),
+    topSchoolDegree: S.optional(S.NullOr(S.String)),
+    topSchoolPeriod: S.optional(S.NullOr(S.String)),
+    employeeCount: S.optional(S.NullOr(S.Number)),
+    employeeCountRange: S.optional(S.NullOr(ProfilePlatformDataLinkedinEmployeeCountRange)),
+    industry: S.optional(S.NullOr(S.String)),
+    pageKind: S.optional(S.NullOr(ProfilePlatformDataLinkedinPageKind)),
+    companyUrn: S.optional(S.NullOr(S.String)),
+    currentCompanyLogoUrl: S.optional(S.NullOr(S.String)),
+    topSchoolLogoUrl: S.optional(S.NullOr(S.String)),
+  }),
+).annotate({
+  identifier: "ProfilePlatformDataLinkedin",
+}) as any as S.Schema<M.ProfilePlatformDataLinkedin>;
+
+export type ProfilePlatformDataLinkedinKind = M.ProfilePlatformDataLinkedinKind;
+export const ProfilePlatformDataLinkedinKind =
+  /*@__PURE__*/ S.String as any as S.Schema<M.ProfilePlatformDataLinkedinKind>;
+
+export type ProfilePlatformDataLinkedinMemberBadge = M.ProfilePlatformDataLinkedinMemberBadge;
+export const ProfilePlatformDataLinkedinMemberBadge =
+  /*@__PURE__*/ S.String as any as S.Schema<M.ProfilePlatformDataLinkedinMemberBadge>;
+
+export type ProfilePlatformDataLinkedinBannerSize = M.ProfilePlatformDataLinkedinBannerSize;
+export const ProfilePlatformDataLinkedinBannerSize = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    width: S.Number,
+    height: S.Number,
+  }),
+).annotate({
+  identifier: "ProfilePlatformDataLinkedinBannerSize",
+}) as any as S.Schema<M.ProfilePlatformDataLinkedinBannerSize>;
+
+export type ProfilePlatformDataLinkedinCurrentRoleStart =
+  M.ProfilePlatformDataLinkedinCurrentRoleStart;
+export const ProfilePlatformDataLinkedinCurrentRoleStart = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    year: S.Number,
+    month: S.NullOr(S.Number),
+  }),
+).annotate({
+  identifier: "ProfilePlatformDataLinkedinCurrentRoleStart",
+}) as any as S.Schema<M.ProfilePlatformDataLinkedinCurrentRoleStart>;
+
+export type ProfilePlatformDataLinkedinEmployeeCountRange =
+  M.ProfilePlatformDataLinkedinEmployeeCountRange;
+export const ProfilePlatformDataLinkedinEmployeeCountRange = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    start: S.Number,
+    end: S.NullOr(S.Number),
+  }),
+).annotate({
+  identifier: "ProfilePlatformDataLinkedinEmployeeCountRange",
+}) as any as S.Schema<M.ProfilePlatformDataLinkedinEmployeeCountRange>;
+
+export type ProfilePlatformDataLinkedinPageKind = M.ProfilePlatformDataLinkedinPageKind;
+export const ProfilePlatformDataLinkedinPageKind =
+  /*@__PURE__*/ S.String as any as S.Schema<M.ProfilePlatformDataLinkedinPageKind>;
+
 export type ProfilePlatformDataOther = M.ProfilePlatformDataOther;
 export const ProfilePlatformDataOther = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -345,6 +479,36 @@ export const ProfilePlatformDataOther = /*@__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "ProfilePlatformDataOther",
 }) as any as S.Schema<M.ProfilePlatformDataOther>;
+
+export type Relationship = M.Relationship;
+export const Relationship = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    accountLinkId: S.String,
+    degree: S.NullOr(RelationshipDegree),
+    connectionRequest: S.NullOr(RelationshipConnectionRequest),
+  }),
+).annotate({ identifier: "Relationship" }) as any as S.Schema<M.Relationship>;
+
+export type RelationshipDegree = M.RelationshipDegree;
+export const RelationshipDegree = /*@__PURE__*/ S.String as any as S.Schema<M.RelationshipDegree>;
+
+export type RelationshipConnectionRequest = M.RelationshipConnectionRequest;
+export const RelationshipConnectionRequest = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    sentAt: S.String,
+  }),
+).annotate({
+  identifier: "RelationshipConnectionRequest",
+}) as any as S.Schema<M.RelationshipConnectionRequest>;
+
+export type ContactValuation = M.ContactValuation;
+export const ContactValuation = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, ContactValuationString]),
+).annotate({ identifier: "ContactValuation" }) as any as S.Schema<M.ContactValuation>;
+
+export type ContactValuationString = M.ContactValuationString;
+export const ContactValuationString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.ContactValuationString>;
 
 export type Status = M.Status;
 export const Status = /*@__PURE__*/ S.suspend(() =>
@@ -371,6 +535,181 @@ export const ContactsGetRequestExpandItem = /*@__PURE__*/ S.Literals([
   "tags",
   "assignee",
 ]) as any as S.Schema<M.ContactsGetRequestExpandItem>;
+
+export type PeopleSearchRequestReach = M.PeopleSearchRequestReach;
+export const PeopleSearchRequestReach = /*@__PURE__*/ S.Literals([
+  "contacts",
+  "network",
+]) as any as S.Schema<M.PeopleSearchRequestReach>;
+
+export type PersonList = M.PersonList;
+export const PersonList = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    data: S.Array(Person),
+    failures: S.Array(PeopleSearchFailure),
+  }),
+).annotate({ identifier: "PersonList" }) as any as S.Schema<M.PersonList>;
+
+export type Person = M.Person;
+export const Person = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    accountLinkId: S.String,
+    profile: PersonProfile,
+    contactId: S.NullOr(S.String),
+    threadId: S.NullOr(S.String),
+    canMessage: S.NullOr(S.Boolean),
+    degree: S.NullOr(PersonDegree),
+    closeness: PersonCloseness,
+    target: PersonTarget,
+  }),
+).annotate({ identifier: "Person" }) as any as S.Schema<M.Person>;
+
+export type PersonProfile = M.PersonProfile;
+export const PersonProfile = /*@__PURE__*/ S.suspend(() => S.Union([Profile, ProfileHit])).annotate(
+  { identifier: "PersonProfile" },
+) as any as S.Schema<M.PersonProfile>;
+
+export type ProfileHit = M.ProfileHit;
+export const ProfileHit = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    id: S.Null,
+    platform: Platform,
+    platformId: S.String,
+    username: S.NullOr(S.String),
+    handle: S.String,
+    displayName: S.String,
+    avatarUrl: S.NullOr(S.String),
+    verified: S.Boolean,
+    isOrganization: S.Boolean,
+    profileUrl: S.NullOr(S.String),
+    platformData: ProfilePlatformData,
+  }),
+).annotate({ identifier: "ProfileHit" }) as any as S.Schema<M.ProfileHit>;
+
+export type PersonDegree = M.PersonDegree;
+export const PersonDegree = /*@__PURE__*/ S.String as any as S.Schema<M.PersonDegree>;
+
+export type PersonCloseness = M.PersonCloseness;
+export const PersonCloseness = /*@__PURE__*/ S.String as any as S.Schema<M.PersonCloseness>;
+
+export type PersonTarget = M.PersonTarget;
+export const PersonTarget = /*@__PURE__*/ S.suspend(() =>
+  S.Union([PersonTargetProfileByPlatformID, PersonTargetProfileByUsername]),
+).annotate({ identifier: "PersonTarget" }) as any as S.Schema<M.PersonTarget>;
+
+export type PersonTargetProfileByPlatformID = M.PersonTargetProfileByPlatformID;
+export const PersonTargetProfileByPlatformID = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("profile"),
+    accountLinkId: Cuid2,
+    platform: Platform,
+    platformId: S.String,
+  }),
+).annotate({
+  identifier: "PersonTargetProfileByPlatformID",
+}) as any as S.Schema<M.PersonTargetProfileByPlatformID>;
+
+export type PersonTargetProfileByUsername = M.PersonTargetProfileByUsername;
+export const PersonTargetProfileByUsername = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("profile"),
+    accountLinkId: Cuid2,
+    platform: Platform,
+    username: S.String,
+  }),
+).annotate({
+  identifier: "PersonTargetProfileByUsername",
+}) as any as S.Schema<M.PersonTargetProfileByUsername>;
+
+export type PeopleSearchFailure = M.PeopleSearchFailure;
+export const PeopleSearchFailure = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    accountLinkId: S.String,
+    code: PeopleSearchFailureCode,
+    message: S.String,
+  }),
+).annotate({ identifier: "PeopleSearchFailure" }) as any as S.Schema<M.PeopleSearchFailure>;
+
+export type PeopleSearchFailureCode = M.PeopleSearchFailureCode;
+export const PeopleSearchFailureCode =
+  /*@__PURE__*/ S.String as any as S.Schema<M.PeopleSearchFailureCode>;
+
+export type PlanRequiredDetails = M.PlanRequiredDetails;
+export const PlanRequiredDetails = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    feature: S.String,
+  }),
+).annotate({ identifier: "PlanRequiredDetails" }) as any as S.Schema<M.PlanRequiredDetails>;
+
+export type AccountLinkDisconnectedDetails = M.AccountLinkDisconnectedDetails;
+export const AccountLinkDisconnectedDetails = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    accountLinkId: S.String,
+    status: AccountLinkDisconnectedDetailsStatus,
+  }),
+).annotate({
+  identifier: "AccountLinkDisconnectedDetails",
+}) as any as S.Schema<M.AccountLinkDisconnectedDetails>;
+
+export type AccountLinkDisconnectedDetailsStatus = M.AccountLinkDisconnectedDetailsStatus;
+export const AccountLinkDisconnectedDetailsStatus =
+  /*@__PURE__*/ S.String as any as S.Schema<M.AccountLinkDisconnectedDetailsStatus>;
+
+export type IntegrationSetupRequiredDetails = M.IntegrationSetupRequiredDetails;
+export const IntegrationSetupRequiredDetails = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    accountLinkId: S.String,
+  }),
+).annotate({
+  identifier: "IntegrationSetupRequiredDetails",
+}) as any as S.Schema<M.IntegrationSetupRequiredDetails>;
+
+export type CapabilityNotSupportedDetails = M.CapabilityNotSupportedDetails;
+export const CapabilityNotSupportedDetails = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    capability: CapabilityNotSupportedDetailsCapability,
+  }),
+).annotate({
+  identifier: "CapabilityNotSupportedDetails",
+}) as any as S.Schema<M.CapabilityNotSupportedDetails>;
+
+export type CapabilityNotSupportedDetailsCapability = M.CapabilityNotSupportedDetailsCapability;
+export const CapabilityNotSupportedDetailsCapability =
+  /*@__PURE__*/ S.String as any as S.Schema<M.CapabilityNotSupportedDetailsCapability>;
+
+export type PeopleSearchRateLimitedDetails = M.PeopleSearchRateLimitedDetails;
+export const PeopleSearchRateLimitedDetails = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    accountLinkId: S.String,
+    window: PeopleSearchRateLimitedDetailsWindow,
+    limit: S.Number,
+    resetAt: S.String,
+  }),
+).annotate({
+  identifier: "PeopleSearchRateLimitedDetails",
+}) as any as S.Schema<M.PeopleSearchRateLimitedDetails>;
+
+export type PeopleSearchRateLimitedDetailsWindow = M.PeopleSearchRateLimitedDetailsWindow;
+export const PeopleSearchRateLimitedDetailsWindow =
+  /*@__PURE__*/ S.String as any as S.Schema<M.PeopleSearchRateLimitedDetailsWindow>;
+
+export type PlatformRateLimitedDetails = M.PlatformRateLimitedDetails;
+export const PlatformRateLimitedDetails = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    retryAfterSeconds: S.NullOr(S.Number),
+  }),
+).annotate({
+  identifier: "PlatformRateLimitedDetails",
+}) as any as S.Schema<M.PlatformRateLimitedDetails>;
+
+export type PlatformUnavailableDetails = M.PlatformUnavailableDetails;
+export const PlatformUnavailableDetails = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    retryAfterSeconds: S.NullOr(S.Number),
+  }),
+).annotate({
+  identifier: "PlatformUnavailableDetails",
+}) as any as S.Schema<M.PlatformUnavailableDetails>;
 
 export type ThreadsListRequestFolder = M.ThreadsListRequestFolder;
 export const ThreadsListRequestFolder = /*@__PURE__*/ S.Literals([
@@ -422,6 +761,8 @@ export const Thread = /*@__PURE__*/ S.suspend(() =>
     typingIndicators: ThreadTypingIndicators,
     lastMessage: S.NullOr(LastMessage),
     activity: S.NullOr(ThreadActivity),
+    seen: S.NullOr(ThreadSeen),
+    delivered: S.NullOr(ThreadDelivered),
     createdAt: S.String,
     accountLink: S.optional(AccountLink),
     profile: S.optional(Profile),
@@ -459,14 +800,35 @@ export type ThreadActivity = M.ThreadActivity;
 export const ThreadActivity = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
     preview: S.NullOr(S.String),
+    previewKind: S.NullOr(ThreadActivityPreviewKind),
     direction: ThreadActivityDirection,
     at: S.String,
   }),
 ).annotate({ identifier: "ThreadActivity" }) as any as S.Schema<M.ThreadActivity>;
 
+export type ThreadActivityPreviewKind = M.ThreadActivityPreviewKind;
+export const ThreadActivityPreviewKind =
+  /*@__PURE__*/ S.String as any as S.Schema<M.ThreadActivityPreviewKind>;
+
 export type ThreadActivityDirection = M.ThreadActivityDirection;
 export const ThreadActivityDirection =
   /*@__PURE__*/ S.String as any as S.Schema<M.ThreadActivityDirection>;
+
+export type ThreadSeen = M.ThreadSeen;
+export const ThreadSeen = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    messageId: S.String,
+    at: S.String,
+  }),
+).annotate({ identifier: "ThreadSeen" }) as any as S.Schema<M.ThreadSeen>;
+
+export type ThreadDelivered = M.ThreadDelivered;
+export const ThreadDelivered = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    messageId: S.String,
+    at: S.String,
+  }),
+).annotate({ identifier: "ThreadDelivered" }) as any as S.Schema<M.ThreadDelivered>;
 
 export type ThreadsGetRequestExpandItem = M.ThreadsGetRequestExpandItem;
 export const ThreadsGetRequestExpandItem = /*@__PURE__*/ S.Literals([
@@ -492,60 +854,6 @@ export const ThreadDeletion = /*@__PURE__*/ S.suspend(() =>
 
 export type ThreadDeletionScope = M.ThreadDeletionScope;
 export const ThreadDeletionScope = /*@__PURE__*/ S.String as any as S.Schema<M.ThreadDeletionScope>;
-
-export type AccountLinkDisconnectedDetails = M.AccountLinkDisconnectedDetails;
-export const AccountLinkDisconnectedDetails = /*@__PURE__*/ S.suspend(() =>
-  S.Struct({
-    accountLinkId: S.String,
-    status: AccountLinkDisconnectedDetailsStatus,
-  }),
-).annotate({
-  identifier: "AccountLinkDisconnectedDetails",
-}) as any as S.Schema<M.AccountLinkDisconnectedDetails>;
-
-export type AccountLinkDisconnectedDetailsStatus = M.AccountLinkDisconnectedDetailsStatus;
-export const AccountLinkDisconnectedDetailsStatus =
-  /*@__PURE__*/ S.String as any as S.Schema<M.AccountLinkDisconnectedDetailsStatus>;
-
-export type IntegrationSetupRequiredDetails = M.IntegrationSetupRequiredDetails;
-export const IntegrationSetupRequiredDetails = /*@__PURE__*/ S.suspend(() =>
-  S.Struct({
-    accountLinkId: S.String,
-  }),
-).annotate({
-  identifier: "IntegrationSetupRequiredDetails",
-}) as any as S.Schema<M.IntegrationSetupRequiredDetails>;
-
-export type CapabilityNotSupportedDetails = M.CapabilityNotSupportedDetails;
-export const CapabilityNotSupportedDetails = /*@__PURE__*/ S.suspend(() =>
-  S.Struct({
-    capability: CapabilityNotSupportedDetailsCapability,
-  }),
-).annotate({
-  identifier: "CapabilityNotSupportedDetails",
-}) as any as S.Schema<M.CapabilityNotSupportedDetails>;
-
-export type CapabilityNotSupportedDetailsCapability = M.CapabilityNotSupportedDetailsCapability;
-export const CapabilityNotSupportedDetailsCapability =
-  /*@__PURE__*/ S.String as any as S.Schema<M.CapabilityNotSupportedDetailsCapability>;
-
-export type PlatformRateLimitedDetails = M.PlatformRateLimitedDetails;
-export const PlatformRateLimitedDetails = /*@__PURE__*/ S.suspend(() =>
-  S.Struct({
-    retryAfterSeconds: S.NullOr(S.Number),
-  }),
-).annotate({
-  identifier: "PlatformRateLimitedDetails",
-}) as any as S.Schema<M.PlatformRateLimitedDetails>;
-
-export type PlatformUnavailableDetails = M.PlatformUnavailableDetails;
-export const PlatformUnavailableDetails = /*@__PURE__*/ S.suspend(() =>
-  S.Struct({
-    retryAfterSeconds: S.NullOr(S.Number),
-  }),
-).annotate({
-  identifier: "PlatformUnavailableDetails",
-}) as any as S.Schema<M.PlatformUnavailableDetails>;
 
 export type TypingSignal = M.TypingSignal;
 export const TypingSignal = /*@__PURE__*/ S.suspend(() =>
@@ -614,7 +922,7 @@ export const MessageDirection = /*@__PURE__*/ S.String as any as S.Schema<M.Mess
 
 export type MessageSentBy = M.MessageSentBy;
 export const MessageSentBy = /*@__PURE__*/ S.suspend(() =>
-  S.Union([MessageSentByMember, MessageSentByAgent, MessageSentByCampaign, MessageSentByApi]),
+  S.Union([MessageSentByMember, MessageSentByAgent, MessageSentByCampaign, MessageSentByAPIToken]),
 ).annotate({ identifier: "MessageSentBy" }) as any as S.Schema<M.MessageSentBy>;
 
 export type MessageSentByMember = M.MessageSentByMember;
@@ -654,22 +962,24 @@ export const MessageSentByCampaign = /*@__PURE__*/ S.suspend(() =>
   }),
 ).annotate({ identifier: "MessageSentByCampaign" }) as any as S.Schema<M.MessageSentByCampaign>;
 
-export type MessageSentByApi = M.MessageSentByApi;
-export const MessageSentByApi = /*@__PURE__*/ S.suspend(() =>
+export type MessageSentByAPIToken = M.MessageSentByAPIToken;
+export const MessageSentByAPIToken = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
     type: S.Literal("api"),
     tokenId: S.NullOr(S.String),
-    token: S.optional(MessageSentByApiToken),
+    token: S.optional(MessageSentByAPITokenToken),
   }),
-).annotate({ identifier: "MessageSentByApi" }) as any as S.Schema<M.MessageSentByApi>;
+).annotate({ identifier: "MessageSentByAPIToken" }) as any as S.Schema<M.MessageSentByAPIToken>;
 
-export type MessageSentByApiToken = M.MessageSentByApiToken;
-export const MessageSentByApiToken = /*@__PURE__*/ S.suspend(() =>
+export type MessageSentByAPITokenToken = M.MessageSentByAPITokenToken;
+export const MessageSentByAPITokenToken = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
     id: S.String,
     name: S.String,
   }),
-).annotate({ identifier: "MessageSentByApiToken" }) as any as S.Schema<M.MessageSentByApiToken>;
+).annotate({
+  identifier: "MessageSentByAPITokenToken",
+}) as any as S.Schema<M.MessageSentByAPITokenToken>;
 
 export type MessageEntities = M.MessageEntities;
 export const MessageEntities = /*@__PURE__*/ S.suspend(() =>
@@ -821,11 +1131,11 @@ export const AttachmentMedia = /*@__PURE__*/ S.suspend(() =>
     kind: AttachmentMediaKind,
     filename: S.NullOr(S.String),
     contentType: S.NullOr(S.String),
-    sizeBytes: S.NullOr(S.Number),
-    width: S.NullOr(S.Number),
-    height: S.NullOr(S.Number),
-    aspectRatio: S.NullOr(S.Number),
-    durationSeconds: S.NullOr(S.Number),
+    sizeBytes: S.NullOr(AttachmentMediaSizeBytes),
+    width: S.NullOr(AttachmentMediaWidth),
+    height: S.NullOr(AttachmentMediaHeight),
+    aspectRatio: S.NullOr(AttachmentMediaAspectRatio),
+    durationSeconds: S.NullOr(AttachmentMediaDurationSeconds),
     status: AttachmentMediaStatus,
     url: S.NullOr(S.String),
     expiresAt: S.NullOr(S.String),
@@ -836,6 +1146,57 @@ export const AttachmentMedia = /*@__PURE__*/ S.suspend(() =>
 export type AttachmentMediaKind = M.AttachmentMediaKind;
 export const AttachmentMediaKind = /*@__PURE__*/ S.String as any as S.Schema<M.AttachmentMediaKind>;
 
+export type AttachmentMediaSizeBytes = M.AttachmentMediaSizeBytes;
+export const AttachmentMediaSizeBytes = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, AttachmentMediaSizeBytesString]),
+).annotate({
+  identifier: "AttachmentMediaSizeBytes",
+}) as any as S.Schema<M.AttachmentMediaSizeBytes>;
+
+export type AttachmentMediaSizeBytesString = M.AttachmentMediaSizeBytesString;
+export const AttachmentMediaSizeBytesString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.AttachmentMediaSizeBytesString>;
+
+export type AttachmentMediaWidth = M.AttachmentMediaWidth;
+export const AttachmentMediaWidth = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, AttachmentMediaWidthString]),
+).annotate({ identifier: "AttachmentMediaWidth" }) as any as S.Schema<M.AttachmentMediaWidth>;
+
+export type AttachmentMediaWidthString = M.AttachmentMediaWidthString;
+export const AttachmentMediaWidthString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.AttachmentMediaWidthString>;
+
+export type AttachmentMediaHeight = M.AttachmentMediaHeight;
+export const AttachmentMediaHeight = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, AttachmentMediaHeightString]),
+).annotate({ identifier: "AttachmentMediaHeight" }) as any as S.Schema<M.AttachmentMediaHeight>;
+
+export type AttachmentMediaHeightString = M.AttachmentMediaHeightString;
+export const AttachmentMediaHeightString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.AttachmentMediaHeightString>;
+
+export type AttachmentMediaAspectRatio = M.AttachmentMediaAspectRatio;
+export const AttachmentMediaAspectRatio = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, AttachmentMediaAspectRatioString]),
+).annotate({
+  identifier: "AttachmentMediaAspectRatio",
+}) as any as S.Schema<M.AttachmentMediaAspectRatio>;
+
+export type AttachmentMediaAspectRatioString = M.AttachmentMediaAspectRatioString;
+export const AttachmentMediaAspectRatioString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.AttachmentMediaAspectRatioString>;
+
+export type AttachmentMediaDurationSeconds = M.AttachmentMediaDurationSeconds;
+export const AttachmentMediaDurationSeconds = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, AttachmentMediaDurationSecondsString]),
+).annotate({
+  identifier: "AttachmentMediaDurationSeconds",
+}) as any as S.Schema<M.AttachmentMediaDurationSeconds>;
+
+export type AttachmentMediaDurationSecondsString = M.AttachmentMediaDurationSecondsString;
+export const AttachmentMediaDurationSecondsString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.AttachmentMediaDurationSecondsString>;
+
 export type AttachmentMediaStatus = M.AttachmentMediaStatus;
 export const AttachmentMediaStatus =
   /*@__PURE__*/ S.String as any as S.Schema<M.AttachmentMediaStatus>;
@@ -845,10 +1206,32 @@ export const AttachmentMediaPoster = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
     url: S.String,
     expiresAt: S.NullOr(S.String),
-    width: S.NullOr(S.Number),
-    height: S.NullOr(S.Number),
+    width: S.NullOr(AttachmentMediaPosterWidth),
+    height: S.NullOr(AttachmentMediaPosterHeight),
   }),
 ).annotate({ identifier: "AttachmentMediaPoster" }) as any as S.Schema<M.AttachmentMediaPoster>;
+
+export type AttachmentMediaPosterWidth = M.AttachmentMediaPosterWidth;
+export const AttachmentMediaPosterWidth = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, AttachmentMediaPosterWidthString]),
+).annotate({
+  identifier: "AttachmentMediaPosterWidth",
+}) as any as S.Schema<M.AttachmentMediaPosterWidth>;
+
+export type AttachmentMediaPosterWidthString = M.AttachmentMediaPosterWidthString;
+export const AttachmentMediaPosterWidthString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.AttachmentMediaPosterWidthString>;
+
+export type AttachmentMediaPosterHeight = M.AttachmentMediaPosterHeight;
+export const AttachmentMediaPosterHeight = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, AttachmentMediaPosterHeightString]),
+).annotate({
+  identifier: "AttachmentMediaPosterHeight",
+}) as any as S.Schema<M.AttachmentMediaPosterHeight>;
+
+export type AttachmentMediaPosterHeightString = M.AttachmentMediaPosterHeightString;
+export const AttachmentMediaPosterHeightString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.AttachmentMediaPosterHeightString>;
 
 export type AttachmentCard = M.AttachmentCard;
 export const AttachmentCard = /*@__PURE__*/ S.suspend(() =>
@@ -926,7 +1309,7 @@ export const ReactionAuthorUnknown = /*@__PURE__*/ S.suspend(() =>
 
 export type MessagePlatformData = M.MessagePlatformData;
 export const MessagePlatformData = /*@__PURE__*/ S.suspend(() =>
-  S.Union([MessagePlatformDataTwitter, MessagePlatformDataOther]),
+  S.Union([MessagePlatformDataTwitter, MessagePlatformDataLinkedin, MessagePlatformDataOther]),
 ).annotate({ identifier: "MessagePlatformData" }) as any as S.Schema<M.MessagePlatformData>;
 
 export type MessagePlatformDataTwitter = M.MessagePlatformDataTwitter;
@@ -938,6 +1321,15 @@ export const MessagePlatformDataTwitter = /*@__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "MessagePlatformDataTwitter",
 }) as any as S.Schema<M.MessagePlatformDataTwitter>;
+
+export type MessagePlatformDataLinkedin = M.MessagePlatformDataLinkedin;
+export const MessagePlatformDataLinkedin = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    _tag: S.Literal("linkedin"),
+  }),
+).annotate({
+  identifier: "MessagePlatformDataLinkedin",
+}) as any as S.Schema<M.MessagePlatformDataLinkedin>;
 
 export type MessagePlatformDataOther = M.MessagePlatformDataOther;
 export const MessagePlatformDataOther = /*@__PURE__*/ S.suspend(() =>
@@ -1030,7 +1422,12 @@ export const MessageDeletionScope =
 
 export type SendRequestTarget = M.SendRequestTarget;
 export const SendRequestTarget = /*@__PURE__*/ S.suspend(() =>
-  S.Union([SendRequestTargetThread, SendRequestTargetContact, SendRequestTargetProfile]),
+  S.Union([
+    SendRequestTargetThread,
+    SendRequestTargetContact,
+    SendRequestTargetProfileByPlatformID,
+    SendRequestTargetProfileByUsername,
+  ]),
 ).annotate({ identifier: "SendRequestTarget" }) as any as S.Schema<M.SendRequestTarget>;
 
 export type SendRequestTargetThread = M.SendRequestTargetThread;
@@ -1052,8 +1449,8 @@ export const SendRequestTargetContact = /*@__PURE__*/ S.suspend(() =>
   identifier: "SendRequestTargetContact",
 }) as any as S.Schema<M.SendRequestTargetContact>;
 
-export type SendRequestTargetProfile = M.SendRequestTargetProfile;
-export const SendRequestTargetProfile = /*@__PURE__*/ S.suspend(() =>
+export type SendRequestTargetProfileByPlatformID = M.SendRequestTargetProfileByPlatformID;
+export const SendRequestTargetProfileByPlatformID = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
     type: S.Literal("profile"),
     accountLinkId: Cuid2,
@@ -1061,15 +1458,20 @@ export const SendRequestTargetProfile = /*@__PURE__*/ S.suspend(() =>
     platformId: S.String,
   }),
 ).annotate({
-  identifier: "SendRequestTargetProfile",
-}) as any as S.Schema<M.SendRequestTargetProfile>;
+  identifier: "SendRequestTargetProfileByPlatformID",
+}) as any as S.Schema<M.SendRequestTargetProfileByPlatformID>;
 
-export type PlanRequiredDetails = M.PlanRequiredDetails;
-export const PlanRequiredDetails = /*@__PURE__*/ S.suspend(() =>
+export type SendRequestTargetProfileByUsername = M.SendRequestTargetProfileByUsername;
+export const SendRequestTargetProfileByUsername = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
-    feature: S.String,
+    type: S.Literal("profile"),
+    accountLinkId: Cuid2,
+    platform: Platform,
+    username: S.String,
   }),
-).annotate({ identifier: "PlanRequiredDetails" }) as any as S.Schema<M.PlanRequiredDetails>;
+).annotate({
+  identifier: "SendRequestTargetProfileByUsername",
+}) as any as S.Schema<M.SendRequestTargetProfileByUsername>;
 
 export type SendInProgressDetails = M.SendInProgressDetails;
 export const SendInProgressDetails = /*@__PURE__*/ S.suspend(() =>
@@ -1164,6 +1566,87 @@ export const Reactions = /*@__PURE__*/ S.suspend(() =>
   }),
 ).annotate({ identifier: "Reactions" }) as any as S.Schema<M.Reactions>;
 
+export type ConnectionRequestCreateTarget = M.ConnectionRequestCreateTarget;
+export const ConnectionRequestCreateTarget = /*@__PURE__*/ S.suspend(() =>
+  S.Union([
+    ConnectionRequestCreateTargetThread,
+    ConnectionRequestCreateTargetContact,
+    ConnectionRequestCreateTargetProfileByPlatformID,
+    ConnectionRequestCreateTargetProfileByUsername,
+  ]),
+).annotate({
+  identifier: "ConnectionRequestCreateTarget",
+}) as any as S.Schema<M.ConnectionRequestCreateTarget>;
+
+export type ConnectionRequestCreateTargetThread = M.ConnectionRequestCreateTargetThread;
+export const ConnectionRequestCreateTargetThread = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("thread"),
+    threadId: Cuid2,
+  }),
+).annotate({
+  identifier: "ConnectionRequestCreateTargetThread",
+}) as any as S.Schema<M.ConnectionRequestCreateTargetThread>;
+
+export type ConnectionRequestCreateTargetContact = M.ConnectionRequestCreateTargetContact;
+export const ConnectionRequestCreateTargetContact = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("contact"),
+    accountLinkId: Cuid2,
+    contactId: Cuid2,
+  }),
+).annotate({
+  identifier: "ConnectionRequestCreateTargetContact",
+}) as any as S.Schema<M.ConnectionRequestCreateTargetContact>;
+
+export type ConnectionRequestCreateTargetProfileByPlatformID =
+  M.ConnectionRequestCreateTargetProfileByPlatformID;
+export const ConnectionRequestCreateTargetProfileByPlatformID = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("profile"),
+    accountLinkId: Cuid2,
+    platform: Platform,
+    platformId: S.String,
+  }),
+).annotate({
+  identifier: "ConnectionRequestCreateTargetProfileByPlatformID",
+}) as any as S.Schema<M.ConnectionRequestCreateTargetProfileByPlatformID>;
+
+export type ConnectionRequestCreateTargetProfileByUsername =
+  M.ConnectionRequestCreateTargetProfileByUsername;
+export const ConnectionRequestCreateTargetProfileByUsername = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("profile"),
+    accountLinkId: Cuid2,
+    platform: Platform,
+    username: S.String,
+  }),
+).annotate({
+  identifier: "ConnectionRequestCreateTargetProfileByUsername",
+}) as any as S.Schema<M.ConnectionRequestCreateTargetProfileByUsername>;
+
+export type ConnectionRequest = M.ConnectionRequest;
+export const ConnectionRequest = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    accountLinkId: S.String,
+    profileId: S.String,
+    note: S.NullOr(S.String),
+  }),
+).annotate({ identifier: "ConnectionRequest" }) as any as S.Schema<M.ConnectionRequest>;
+
+export type ConnectionRefusedDetails = M.ConnectionRefusedDetails;
+export const ConnectionRefusedDetails = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    reason: ConnectionRefusedDetailsReason,
+  }),
+).annotate({
+  identifier: "ConnectionRefusedDetails",
+}) as any as S.Schema<M.ConnectionRefusedDetails>;
+
+export type ConnectionRefusedDetailsReason = M.ConnectionRefusedDetailsReason;
+export const ConnectionRefusedDetailsReason =
+  /*@__PURE__*/ S.String as any as S.Schema<M.ConnectionRefusedDetailsReason>;
+
 export type TagPage = M.TagPage;
 export const TagPage = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -1217,6 +1700,7 @@ export const EventsListRequestTypeItem = /*@__PURE__*/ S.Literals([
   "message.deleted",
   "message.reactionAdded",
   "message.reactionRemoved",
+  "message.seen",
   "contact.statusChanged",
   "contact.tagsChanged",
   "contact.notesChanged",
@@ -1236,13 +1720,17 @@ export const EventsListRequestTypeItem = /*@__PURE__*/ S.Literals([
   "target.contacted",
   "target.followUpSent",
   "target.replied",
+  "connectionRequest.sent",
+  "connectionRequest.accepted",
+  "connectionRequest.withdrawn",
+  "follower.created",
 ]) as any as S.Schema<M.EventsListRequestTypeItem>;
 
 export type EventPage = M.EventPage;
 export const EventPage = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
     data: S.Array(EventPageDataItem),
-    lastSeq: S.NullOr(S.Number),
+    lastSeq: S.NullOr(EventPageLastSeq),
     hasMore: S.Boolean,
   }),
 ).annotate({ identifier: "EventPage" }) as any as S.Schema<M.EventPage>;
@@ -1263,6 +1751,7 @@ export const EventPageDataItem = /*@__PURE__*/ S.suspend(() =>
     MessageDeletedEvent,
     MessageReactionAddedEvent,
     MessageReactionRemovedEvent,
+    MessageSeenEvent,
     ContactStatusChangedEvent,
     ContactTagsChangedEvent,
     ContactNotesChangedEvent,
@@ -1282,6 +1771,10 @@ export const EventPageDataItem = /*@__PURE__*/ S.suspend(() =>
     TargetContactedEvent,
     TargetFollowUpSentEvent,
     TargetRepliedEvent,
+    ConnectionRequestSentEvent,
+    ConnectionRequestAcceptedEvent,
+    ConnectionRequestWithdrawnEvent,
+    FollowerCreatedEvent,
   ]),
 ).annotate({ identifier: "EventPageDataItem" }) as any as S.Schema<M.EventPageDataItem>;
 
@@ -1678,6 +2171,40 @@ export const MessageReactionRemovedEventData = /*@__PURE__*/ S.suspend(() =>
   identifier: "MessageReactionRemovedEventData",
 }) as any as S.Schema<M.MessageReactionRemovedEventData>;
 
+export type MessageSeenEvent = M.MessageSeenEvent;
+export const MessageSeenEvent = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    id: S.String,
+    seq: S.Number,
+    type: S.Literal("message.seen"),
+    apiVersion: S.Literal("2"),
+    createdAt: S.String,
+    object: MessageSeenEventObject,
+    data: MessageSeenEventData,
+  }),
+).annotate({ identifier: "MessageSeenEvent" }) as any as S.Schema<M.MessageSeenEvent>;
+
+export type MessageSeenEventObject = M.MessageSeenEventObject;
+export const MessageSeenEventObject = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("message"),
+    id: S.String,
+    url: S.String,
+  }),
+).annotate({ identifier: "MessageSeenEventObject" }) as any as S.Schema<M.MessageSeenEventObject>;
+
+export type MessageSeenEventData = M.MessageSeenEventData;
+export const MessageSeenEventData = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    threadId: S.String,
+    seenByPlatformId: S.String,
+    seenAt: IsoDateTime,
+  }),
+).annotate({ identifier: "MessageSeenEventData" }) as any as S.Schema<M.MessageSeenEventData>;
+
+export type IsoDateTime = M.IsoDateTime;
+export const IsoDateTime = /*@__PURE__*/ S.String as any as S.Schema<M.IsoDateTime>;
+
 export type ContactStatusChangedEvent = M.ContactStatusChangedEvent;
 export const ContactStatusChangedEvent = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -1810,11 +2337,23 @@ export const ContactValuationChangedEventObject = /*@__PURE__*/ S.suspend(() =>
 export type ContactValuationChangedEventData = M.ContactValuationChangedEventData;
 export const ContactValuationChangedEventData = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
-    valuation: S.NullOr(S.Number),
+    valuation: S.NullOr(ContactValuationChangedEventDataValuation),
   }),
 ).annotate({
   identifier: "ContactValuationChangedEventData",
 }) as any as S.Schema<M.ContactValuationChangedEventData>;
+
+export type ContactValuationChangedEventDataValuation = M.ContactValuationChangedEventDataValuation;
+export const ContactValuationChangedEventDataValuation = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, ContactValuationChangedEventDataValuationString]),
+).annotate({
+  identifier: "ContactValuationChangedEventDataValuation",
+}) as any as S.Schema<M.ContactValuationChangedEventDataValuation>;
+
+export type ContactValuationChangedEventDataValuationString =
+  M.ContactValuationChangedEventDataValuationString;
+export const ContactValuationChangedEventDataValuationString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.ContactValuationChangedEventDataValuationString>;
 
 export type ContactAssigneeChangedEvent = M.ContactAssigneeChangedEvent;
 export const ContactAssigneeChangedEvent = /*@__PURE__*/ S.suspend(() =>
@@ -2139,11 +2678,22 @@ export const TargetContactedEventData = /*@__PURE__*/ S.suspend(() =>
     threadId: S.String,
     messageId: S.String,
     contactId: S.NullOr(S.String),
-    stepNumber: S.NullOr(S.Number),
+    stepNumber: S.NullOr(TargetContactedEventDataStepNumber),
   }),
 ).annotate({
   identifier: "TargetContactedEventData",
 }) as any as S.Schema<M.TargetContactedEventData>;
+
+export type TargetContactedEventDataStepNumber = M.TargetContactedEventDataStepNumber;
+export const TargetContactedEventDataStepNumber = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, TargetContactedEventDataStepNumberString]),
+).annotate({
+  identifier: "TargetContactedEventDataStepNumber",
+}) as any as S.Schema<M.TargetContactedEventDataStepNumber>;
+
+export type TargetContactedEventDataStepNumberString = M.TargetContactedEventDataStepNumberString;
+export const TargetContactedEventDataStepNumberString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.TargetContactedEventDataStepNumberString>;
 
 export type TargetFollowUpSentEvent = M.TargetFollowUpSentEvent;
 export const TargetFollowUpSentEvent = /*@__PURE__*/ S.suspend(() =>
@@ -2175,11 +2725,23 @@ export const TargetFollowUpSentEventData = /*@__PURE__*/ S.suspend(() =>
     threadId: S.String,
     messageId: S.String,
     contactId: S.NullOr(S.String),
-    stepNumber: S.NullOr(S.Number),
+    stepNumber: S.NullOr(TargetFollowUpSentEventDataStepNumber),
   }),
 ).annotate({
   identifier: "TargetFollowUpSentEventData",
 }) as any as S.Schema<M.TargetFollowUpSentEventData>;
+
+export type TargetFollowUpSentEventDataStepNumber = M.TargetFollowUpSentEventDataStepNumber;
+export const TargetFollowUpSentEventDataStepNumber = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, TargetFollowUpSentEventDataStepNumberString]),
+).annotate({
+  identifier: "TargetFollowUpSentEventDataStepNumber",
+}) as any as S.Schema<M.TargetFollowUpSentEventDataStepNumber>;
+
+export type TargetFollowUpSentEventDataStepNumberString =
+  M.TargetFollowUpSentEventDataStepNumberString;
+export const TargetFollowUpSentEventDataStepNumberString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.TargetFollowUpSentEventDataStepNumberString>;
 
 export type TargetRepliedEvent = M.TargetRepliedEvent;
 export const TargetRepliedEvent = /*@__PURE__*/ S.suspend(() =>
@@ -2211,9 +2773,155 @@ export const TargetRepliedEventData = /*@__PURE__*/ S.suspend(() =>
     threadId: S.String,
     messageId: S.String,
     contactId: S.NullOr(S.String),
-    stepNumber: S.NullOr(S.Number),
+    stepNumber: S.NullOr(TargetRepliedEventDataStepNumber),
   }),
 ).annotate({ identifier: "TargetRepliedEventData" }) as any as S.Schema<M.TargetRepliedEventData>;
+
+export type TargetRepliedEventDataStepNumber = M.TargetRepliedEventDataStepNumber;
+export const TargetRepliedEventDataStepNumber = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, TargetRepliedEventDataStepNumberString]),
+).annotate({
+  identifier: "TargetRepliedEventDataStepNumber",
+}) as any as S.Schema<M.TargetRepliedEventDataStepNumber>;
+
+export type TargetRepliedEventDataStepNumberString = M.TargetRepliedEventDataStepNumberString;
+export const TargetRepliedEventDataStepNumberString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.TargetRepliedEventDataStepNumberString>;
+
+export type ConnectionRequestSentEvent = M.ConnectionRequestSentEvent;
+export const ConnectionRequestSentEvent = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    id: S.String,
+    seq: S.Number,
+    type: S.Literal("connectionRequest.sent"),
+    apiVersion: S.Literal("2"),
+    createdAt: S.String,
+    object: ConnectionRequestSentEventObject,
+    data: S.Unknown,
+  }),
+).annotate({
+  identifier: "ConnectionRequestSentEvent",
+}) as any as S.Schema<M.ConnectionRequestSentEvent>;
+
+export type ConnectionRequestSentEventObject = M.ConnectionRequestSentEventObject;
+export const ConnectionRequestSentEventObject = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("thread"),
+    id: S.String,
+    url: S.String,
+  }),
+).annotate({
+  identifier: "ConnectionRequestSentEventObject",
+}) as any as S.Schema<M.ConnectionRequestSentEventObject>;
+
+export type ConnectionRequestAcceptedEvent = M.ConnectionRequestAcceptedEvent;
+export const ConnectionRequestAcceptedEvent = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    id: S.String,
+    seq: S.Number,
+    type: S.Literal("connectionRequest.accepted"),
+    apiVersion: S.Literal("2"),
+    createdAt: S.String,
+    object: ConnectionRequestAcceptedEventObject,
+    data: S.Unknown,
+  }),
+).annotate({
+  identifier: "ConnectionRequestAcceptedEvent",
+}) as any as S.Schema<M.ConnectionRequestAcceptedEvent>;
+
+export type ConnectionRequestAcceptedEventObject = M.ConnectionRequestAcceptedEventObject;
+export const ConnectionRequestAcceptedEventObject = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("thread"),
+    id: S.String,
+    url: S.String,
+  }),
+).annotate({
+  identifier: "ConnectionRequestAcceptedEventObject",
+}) as any as S.Schema<M.ConnectionRequestAcceptedEventObject>;
+
+export type ConnectionRequestWithdrawnEvent = M.ConnectionRequestWithdrawnEvent;
+export const ConnectionRequestWithdrawnEvent = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    id: S.String,
+    seq: S.Number,
+    type: S.Literal("connectionRequest.withdrawn"),
+    apiVersion: S.Literal("2"),
+    createdAt: S.String,
+    object: ConnectionRequestWithdrawnEventObject,
+    data: S.Unknown,
+  }),
+).annotate({
+  identifier: "ConnectionRequestWithdrawnEvent",
+}) as any as S.Schema<M.ConnectionRequestWithdrawnEvent>;
+
+export type ConnectionRequestWithdrawnEventObject = M.ConnectionRequestWithdrawnEventObject;
+export const ConnectionRequestWithdrawnEventObject = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("thread"),
+    id: S.String,
+    url: S.String,
+  }),
+).annotate({
+  identifier: "ConnectionRequestWithdrawnEventObject",
+}) as any as S.Schema<M.ConnectionRequestWithdrawnEventObject>;
+
+export type FollowerCreatedEvent = M.FollowerCreatedEvent;
+export const FollowerCreatedEvent = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    id: S.String,
+    seq: S.Number,
+    type: S.Literal("follower.created"),
+    apiVersion: S.Literal("2"),
+    createdAt: S.String,
+    object: FollowerCreatedEventObject,
+    data: FollowerCreatedEventData,
+  }),
+).annotate({ identifier: "FollowerCreatedEvent" }) as any as S.Schema<M.FollowerCreatedEvent>;
+
+export type FollowerCreatedEventObject = M.FollowerCreatedEventObject;
+export const FollowerCreatedEventObject = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("thread"),
+    id: S.String,
+    url: S.String,
+  }),
+).annotate({
+  identifier: "FollowerCreatedEventObject",
+}) as any as S.Schema<M.FollowerCreatedEventObject>;
+
+export type FollowerCreatedEventData = M.FollowerCreatedEventData;
+export const FollowerCreatedEventData = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    accountLinkId: S.String,
+    profile: FollowerCreatedEventDataProfile,
+  }),
+).annotate({
+  identifier: "FollowerCreatedEventData",
+}) as any as S.Schema<M.FollowerCreatedEventData>;
+
+export type FollowerCreatedEventDataProfile = M.FollowerCreatedEventDataProfile;
+export const FollowerCreatedEventDataProfile = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    id: S.String,
+    platform: Platform,
+    platformId: S.String,
+    username: S.String,
+    displayName: S.String,
+    avatarUrl: S.NullOr(S.String),
+  }),
+).annotate({
+  identifier: "FollowerCreatedEventDataProfile",
+}) as any as S.Schema<M.FollowerCreatedEventDataProfile>;
+
+export type EventPageLastSeq = M.EventPageLastSeq;
+export const EventPageLastSeq = /*@__PURE__*/ S.suspend(() =>
+  S.Union([S.Number, EventPageLastSeqString]),
+).annotate({ identifier: "EventPageLastSeq" }) as any as S.Schema<M.EventPageLastSeq>;
+
+export type EventPageLastSeqString = M.EventPageLastSeqString;
+export const EventPageLastSeqString =
+  /*@__PURE__*/ S.String as any as S.Schema<M.EventPageLastSeqString>;
 
 export type MessagesSendResponse = M.MessagesSendResponse;
 export const MessagesSendResponse = /*@__PURE__*/ S.suspend(() =>

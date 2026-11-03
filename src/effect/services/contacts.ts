@@ -12,9 +12,10 @@ import * as Model from "./schemas.ts";
 export type ListRequest = M.ContactsListRequest;
 export const ListRequest = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
-    platform: Model.Platform.pipe(T.Query("platform")),
+    platform: S.optional(S.Array(Model.Platform)).pipe(T.Query("platform")),
     platformId: S.optional(S.Array(S.String)).pipe(T.Query("platformId")),
     username: S.optional(S.Array(S.String)).pipe(T.Query("username")),
+    q: S.optional(S.String).pipe(T.Query("q")),
     expand: S.optional(S.Array(Model.ContactsListRequestExpandItem)).pipe(T.Query("expand")),
     limit: S.optional(S.Number).pipe(T.Query("limit")),
     cursor: S.optional(S.String).pipe(T.Query("cursor")),

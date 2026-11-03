@@ -17,6 +17,7 @@ export interface WebhookEvents {
   "message.deleted": T.MessageDeletedEvent;
   "message.reactionAdded": T.MessageReactionAddedEvent;
   "message.reactionRemoved": T.MessageReactionRemovedEvent;
+  "message.seen": T.MessageSeenEvent;
   "contact.statusChanged": T.ContactStatusChangedEvent;
   "contact.tagsChanged": T.ContactTagsChangedEvent;
   "contact.notesChanged": T.ContactNotesChangedEvent;
@@ -36,6 +37,10 @@ export interface WebhookEvents {
   "target.contacted": T.TargetContactedEvent;
   "target.followUpSent": T.TargetFollowUpSentEvent;
   "target.replied": T.TargetRepliedEvent;
+  "connectionRequest.sent": T.ConnectionRequestSentEvent;
+  "connectionRequest.accepted": T.ConnectionRequestAcceptedEvent;
+  "connectionRequest.withdrawn": T.ConnectionRequestWithdrawnEvent;
+  "follower.created": T.FollowerCreatedEvent;
 }
 
 export type WebhookEventType = keyof WebhookEvents;
@@ -56,6 +61,7 @@ export const webhookEventTypes = [
   "message.deleted",
   "message.reactionAdded",
   "message.reactionRemoved",
+  "message.seen",
   "contact.statusChanged",
   "contact.tagsChanged",
   "contact.notesChanged",
@@ -75,4 +81,8 @@ export const webhookEventTypes = [
   "target.contacted",
   "target.followUpSent",
   "target.replied",
+  "connectionRequest.sent",
+  "connectionRequest.accepted",
+  "connectionRequest.withdrawn",
+  "follower.created",
 ] as const satisfies ReadonlyArray<WebhookEventType>;

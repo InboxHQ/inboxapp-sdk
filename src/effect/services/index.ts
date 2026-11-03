@@ -8,10 +8,14 @@ export * as team from "./team.ts";
 export * as accountLinks from "./account-links.ts";
 /** The team's record of a person, holding its CRM state: status, tags, notes, valuation and default assignee. A contact groups one or more profiles, a person's accounts on the platforms. */
 export * as contacts from "./contacts.ts";
+/** People on the platforms, found through the team's account links whether or not Inboxapp knows them yet. */
+export * as people from "./people.ts";
 /** Conversations between one of the team's account links and one profile. */
 export * as threads from "./threads.ts";
 /** Messages in a thread, and sending, editing, unsending and reacting to them on the platform. */
 export * as messages from "./messages.ts";
+/** How an account link stands with a profile on the platform, and requests that change it. */
+export * as relationships from "./relationships.ts";
 /** Labels the team puts on contacts. */
 export * as tags from "./tags.ts";
 /** The pipeline stages a contact can be in, such as a deal stage. A contact has at most one. */

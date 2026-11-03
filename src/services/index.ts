@@ -6,7 +6,9 @@ import { Colors } from "./colors.ts";
 import { Contacts } from "./contacts.ts";
 import { Events } from "./events.ts";
 import { Messages } from "./messages.ts";
+import { People } from "./people.ts";
 import { Platforms } from "./platforms.ts";
+import { Relationships } from "./relationships.ts";
 import { Statuses } from "./statuses.ts";
 import { Tags } from "./tags.ts";
 import { Team } from "./team.ts";
@@ -21,10 +23,14 @@ export class Services {
   readonly accountLinks: AccountLinks;
   /** The team's record of a person, holding its CRM state: status, tags, notes, valuation and default assignee. A contact groups one or more profiles, a person's accounts on the platforms. */
   readonly contacts: Contacts;
+  /** People on the platforms, found through the team's account links whether or not Inboxapp knows them yet. */
+  readonly people: People;
   /** Conversations between one of the team's account links and one profile. */
   readonly threads: Threads;
   /** Messages in a thread, and sending, editing, unsending and reacting to them on the platform. */
   readonly messages: Messages;
+  /** How an account link stands with a profile on the platform, and requests that change it. */
+  readonly relationships: Relationships;
   /** Labels the team puts on contacts. */
   readonly tags: Tags;
   /** The pipeline stages a contact can be in, such as a deal stage. A contact has at most one. */
@@ -39,8 +45,10 @@ export class Services {
     this.team = new Team(transport);
     this.accountLinks = new AccountLinks(transport);
     this.contacts = new Contacts(transport);
+    this.people = new People(transport);
     this.threads = new Threads(transport);
     this.messages = new Messages(transport);
+    this.relationships = new Relationships(transport);
     this.tags = new Tags(transport);
     this.statuses = new Statuses(transport);
     this.colors = new Colors(transport);

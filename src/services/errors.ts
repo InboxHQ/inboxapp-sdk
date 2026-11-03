@@ -61,9 +61,9 @@ export class TagNotFound extends ApiError<"tagNotFound", null> {
   override name = "TagNotFound";
 }
 
-/** `404 threadNotFound` */
-export class ThreadNotFound extends ApiError<"threadNotFound", null> {
-  override name = "ThreadNotFound";
+/** `403 planRequired` */
+export class PlanRequired extends ApiError<"planRequired", T.PlanRequiredDetails> {
+  override name = "PlanRequired";
 }
 
 /** `409 accountLinkDisconnected` */
@@ -90,6 +90,14 @@ export class CapabilityNotSupported extends ApiError<
   override name = "CapabilityNotSupported";
 }
 
+/** `429 peopleSearchRateLimited` */
+export class PeopleSearchRateLimited extends ApiError<
+  "peopleSearchRateLimited",
+  T.PeopleSearchRateLimitedDetails
+> {
+  override name = "PeopleSearchRateLimited";
+}
+
 /** `429 platformRateLimited` */
 export class PlatformRateLimited extends ApiError<
   "platformRateLimited",
@@ -109,6 +117,11 @@ export class PlatformUnavailable extends ApiError<
   T.PlatformUnavailableDetails
 > {
   override name = "PlatformUnavailable";
+}
+
+/** `404 threadNotFound` */
+export class ThreadNotFound extends ApiError<"threadNotFound", null> {
+  override name = "ThreadNotFound";
 }
 
 /** `404 messageNotFound` */
@@ -140,11 +153,6 @@ export class MessageNotModifiable extends ApiError<
 /** `422 contentRejected` */
 export class ContentRejected extends ApiError<"contentRejected", T.ContentRejectedDetails> {
   override name = "ContentRejected";
-}
-
-/** `403 planRequired` */
-export class PlanRequired extends ApiError<"planRequired", T.PlanRequiredDetails> {
-  override name = "PlanRequired";
 }
 
 /** `409 sendInProgress` */
@@ -183,6 +191,11 @@ export class SendUnconfirmed extends ApiError<"sendUnconfirmed", T.SendUnconfirm
   override name = "SendUnconfirmed";
 }
 
+/** `422 connectionRefused` */
+export class ConnectionRefused extends ApiError<"connectionRefused", T.ConnectionRefusedDetails> {
+  override name = "ConnectionRefused";
+}
+
 /** `409 nameTaken` */
 export class NameTaken extends ApiError<"nameTaken", T.NameTakenDetails> {
   override name = "NameTaken";
@@ -211,25 +224,27 @@ export const errorsByCode = {
   contactNotFound: ContactNotFound,
   workspaceLocked: WorkspaceLocked,
   tagNotFound: TagNotFound,
-  threadNotFound: ThreadNotFound,
+  planRequired: PlanRequired,
   accountLinkDisconnected: AccountLinkDisconnected,
   integrationSetupRequired: IntegrationSetupRequired,
   capabilityNotSupported: CapabilityNotSupported,
+  peopleSearchRateLimited: PeopleSearchRateLimited,
   platformRateLimited: PlatformRateLimited,
   platformError: PlatformError,
   platformUnavailable: PlatformUnavailable,
+  threadNotFound: ThreadNotFound,
   messageNotFound: MessageNotFound,
   threadRestricted: ThreadRestricted,
   mutationWindowClosed: MutationWindowClosed,
   messageNotModifiable: MessageNotModifiable,
   contentRejected: ContentRejected,
-  planRequired: PlanRequired,
   sendInProgress: SendInProgress,
   idempotencyKeyReused: IdempotencyKeyReused,
   recipientUnavailable: RecipientUnavailable,
   platformNotSupported: PlatformNotSupported,
   profileAmbiguous: ProfileAmbiguous,
   sendUnconfirmed: SendUnconfirmed,
+  connectionRefused: ConnectionRefused,
   nameTaken: NameTaken,
   tagLimitReached: TagLimitReached,
   statusNotFound: StatusNotFound,
@@ -243,6 +258,7 @@ export type KnownApiError = InstanceType<ErrorsByCode[keyof ErrorsByCode]>;
 export const retryableCodes = {
   rateLimited: "throttling",
   internal: "transient",
+  peopleSearchRateLimited: "throttling",
   platformRateLimited: "throttling",
   platformError: "transient",
   platformUnavailable: "transient",
@@ -286,6 +302,19 @@ export type ContactsRemoveTagError =
   | WorkspaceLocked
   | ContactNotFound
   | TagNotFound
+  | CommonError;
+
+export type PeopleSearchError =
+  | PlatformNotAvailable
+  | PlanRequired
+  | AccountLinkNotFound
+  | AccountLinkDisconnected
+  | IntegrationSetupRequired
+  | CapabilityNotSupported
+  | PeopleSearchRateLimited
+  | PlatformRateLimited
+  | PlatformError
+  | PlatformUnavailable
   | CommonError;
 
 export type ThreadsListError = InvalidCursor | PlatformNotAvailable | CommonError;
@@ -410,7 +439,35 @@ export type MessagesUnreactError =
   | PlatformUnavailable
   | CommonError;
 
-export type MessagesAttachmentError = PlatformNotAvailable | MessageNotFound | CommonError;
+export type MessagesAttachmentError =
+  | PlatformNotAvailable
+  | MessageNotFound
+  | AccountLinkDisconnected
+  | IntegrationSetupRequired
+  | CapabilityNotSupported
+  | PlatformRateLimited
+  | PlatformError
+  | PlatformUnavailable
+  | CommonError;
+
+export type RelationshipsConnectError =
+  | PlatformNotAvailable
+  | PlanRequired
+  | WorkspaceLocked
+  | ThreadNotFound
+  | ContactNotFound
+  | AccountLinkNotFound
+  | AccountLinkDisconnected
+  | IntegrationSetupRequired
+  | RecipientUnavailable
+  | PlatformNotSupported
+  | ProfileAmbiguous
+  | ConnectionRefused
+  | CapabilityNotSupported
+  | PlatformRateLimited
+  | PlatformError
+  | PlatformUnavailable
+  | CommonError;
 
 export type TagsListError = CommonError;
 

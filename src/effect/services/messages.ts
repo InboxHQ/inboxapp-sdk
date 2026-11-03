@@ -393,7 +393,16 @@ export const AttachmentRequest = /*@__PURE__*/ S.suspend(() =>
   identifier: "MessagesAttachmentRequest",
 }) as any as S.Schema<M.MessagesAttachmentRequest>;
 
-export type AttachmentError = E.PlatformNotAvailable | E.MessageNotFound | InboxappOpError;
+export type AttachmentError =
+  | E.PlatformNotAvailable
+  | E.MessageNotFound
+  | E.AccountLinkDisconnected
+  | E.IntegrationSetupRequired
+  | E.CapabilityNotSupported
+  | E.PlatformRateLimited
+  | E.PlatformError
+  | E.PlatformUnavailable
+  | InboxappOpError;
 /**
  * Get attachment
  *
@@ -408,7 +417,16 @@ export const attachment: API.OperationMethod<
   id: "messages.attachment",
   input: AttachmentRequest,
   output: Model.AttachmentMedia,
-  errors: [E.PlatformNotAvailable, E.MessageNotFound],
+  errors: [
+    E.PlatformNotAvailable,
+    E.MessageNotFound,
+    E.AccountLinkDisconnected,
+    E.IntegrationSetupRequired,
+    E.CapabilityNotSupported,
+    E.PlatformRateLimited,
+    E.PlatformError,
+    E.PlatformUnavailable,
+  ],
   protocol: InboxappProtocol,
   retry: Retry.Retry,
 }));

@@ -140,16 +140,16 @@ export class TagNotFound
     [{ code: "tagNotFound" }],
   ) {}
 
-/** `404 threadNotFound` */
-export class ThreadNotFound
+/** `403 planRequired` */
+export class PlanRequired
   extends /*@__PURE__*/ T.applyErrorMatchers(
-    /*@__PURE__*/ Schema.TaggedError<ThreadNotFound>()("ThreadNotFound", {
-      code: Schema.Literal("threadNotFound"),
+    /*@__PURE__*/ Schema.TaggedError<PlanRequired>()("PlanRequired", {
+      code: Schema.Literal("planRequired"),
       message: Schema.String,
-      details: Details<null>(),
+      details: Details<M.PlanRequiredDetails>(),
       requestId: Schema.String,
-    }).pipe(Category.withNotFoundError),
-    [{ code: "threadNotFound" }],
+    }).pipe(Category.withAuthError),
+    [{ code: "planRequired" }],
   ) {}
 
 /** `409 accountLinkDisconnected` */
@@ -186,6 +186,19 @@ export class CapabilityNotSupported
       requestId: Schema.String,
     }).pipe(Category.withBadRequestError),
     [{ code: "capabilityNotSupported" }],
+  ) {}
+
+/** `429 peopleSearchRateLimited` */
+export class PeopleSearchRateLimited
+  extends /*@__PURE__*/ T.applyErrorMatchers(
+    /*@__PURE__*/ Schema.TaggedError<PeopleSearchRateLimited>()("PeopleSearchRateLimited", {
+      code: Schema.Literal("peopleSearchRateLimited"),
+      message: Schema.String,
+      details: Details<M.PeopleSearchRateLimitedDetails>(),
+      requestId: Schema.String,
+      retryAfter: Schema.optional(DurationSchema),
+    }).pipe(Category.withThrottlingError, Category.withRetryable({ throttling: true })),
+    [{ code: "peopleSearchRateLimited" }],
   ) {}
 
 /** `429 platformRateLimited` */
@@ -225,6 +238,18 @@ export class PlatformUnavailable
       retryAfter: Schema.optional(DurationSchema),
     }).pipe(Category.withServerError, Category.withRetryable()),
     [{ code: "platformUnavailable" }],
+  ) {}
+
+/** `404 threadNotFound` */
+export class ThreadNotFound
+  extends /*@__PURE__*/ T.applyErrorMatchers(
+    /*@__PURE__*/ Schema.TaggedError<ThreadNotFound>()("ThreadNotFound", {
+      code: Schema.Literal("threadNotFound"),
+      message: Schema.String,
+      details: Details<null>(),
+      requestId: Schema.String,
+    }).pipe(Category.withNotFoundError),
+    [{ code: "threadNotFound" }],
   ) {}
 
 /** `404 messageNotFound` */
@@ -285,18 +310,6 @@ export class ContentRejected
       requestId: Schema.String,
     }).pipe(Category.withBadRequestError),
     [{ code: "contentRejected" }],
-  ) {}
-
-/** `403 planRequired` */
-export class PlanRequired
-  extends /*@__PURE__*/ T.applyErrorMatchers(
-    /*@__PURE__*/ Schema.TaggedError<PlanRequired>()("PlanRequired", {
-      code: Schema.Literal("planRequired"),
-      message: Schema.String,
-      details: Details<M.PlanRequiredDetails>(),
-      requestId: Schema.String,
-    }).pipe(Category.withAuthError),
-    [{ code: "planRequired" }],
   ) {}
 
 /** `409 sendInProgress` */
@@ -370,6 +383,18 @@ export class SendUnconfirmed
       requestId: Schema.String,
     }).pipe(Category.withServerError),
     [{ code: "sendUnconfirmed" }],
+  ) {}
+
+/** `422 connectionRefused` */
+export class ConnectionRefused
+  extends /*@__PURE__*/ T.applyErrorMatchers(
+    /*@__PURE__*/ Schema.TaggedError<ConnectionRefused>()("ConnectionRefused", {
+      code: Schema.Literal("connectionRefused"),
+      message: Schema.String,
+      details: Details<M.ConnectionRefusedDetails>(),
+      requestId: Schema.String,
+    }).pipe(Category.withBadRequestError),
+    [{ code: "connectionRefused" }],
   ) {}
 
 /** `409 nameTaken` */

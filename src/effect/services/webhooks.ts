@@ -19,6 +19,7 @@ export const byType = {
   "message.deleted": Model.MessageDeletedEvent,
   "message.reactionAdded": Model.MessageReactionAddedEvent,
   "message.reactionRemoved": Model.MessageReactionRemovedEvent,
+  "message.seen": Model.MessageSeenEvent,
   "contact.statusChanged": Model.ContactStatusChangedEvent,
   "contact.tagsChanged": Model.ContactTagsChangedEvent,
   "contact.notesChanged": Model.ContactNotesChangedEvent,
@@ -38,6 +39,10 @@ export const byType = {
   "target.contacted": Model.TargetContactedEvent,
   "target.followUpSent": Model.TargetFollowUpSentEvent,
   "target.replied": Model.TargetRepliedEvent,
+  "connectionRequest.sent": Model.ConnectionRequestSentEvent,
+  "connectionRequest.accepted": Model.ConnectionRequestAcceptedEvent,
+  "connectionRequest.withdrawn": Model.ConnectionRequestWithdrawnEvent,
+  "follower.created": Model.FollowerCreatedEvent,
 } as const;
 
 export type WebhookEvent = Plain.WebhookEvent;
@@ -55,6 +60,7 @@ export const WebhookEvent = /*@__PURE__*/ S.Union([
   Model.MessageDeletedEvent,
   Model.MessageReactionAddedEvent,
   Model.MessageReactionRemovedEvent,
+  Model.MessageSeenEvent,
   Model.ContactStatusChangedEvent,
   Model.ContactTagsChangedEvent,
   Model.ContactNotesChangedEvent,
@@ -74,4 +80,8 @@ export const WebhookEvent = /*@__PURE__*/ S.Union([
   Model.TargetContactedEvent,
   Model.TargetFollowUpSentEvent,
   Model.TargetRepliedEvent,
+  Model.ConnectionRequestSentEvent,
+  Model.ConnectionRequestAcceptedEvent,
+  Model.ConnectionRequestWithdrawnEvent,
+  Model.FollowerCreatedEvent,
 ]) as any as S.Schema<Plain.WebhookEvent>;

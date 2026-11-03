@@ -10,14 +10,14 @@ export interface PlatformInfo {
   usernamePrefix: string;
   /** The platform's baseline. Each account link narrows it in its own `capabilities`. */
   capabilities: Array<PlatformInfoCapabilitiesItem>;
-  /** Limits checked before a send reaches the platform. */
+  /** Limits checked before a request reaches the platform. */
   limits: PlatformInfoLimits;
   /** Seconds after a message's `createdAt` during which a capability still applies to it, such as `message:edit`. A capability without an entry has no window. */
   mutationWindows: PlatformInfoMutationWindows;
   threadState: PlatformInfoThreadState;
 }
 
-/** The platform. Every team can use twitter; a team may have others enabled. */
+/** The platform. Every team can use twitter, linkedin; a team may have others enabled. */
 export type Platform = string;
 
 export type PlatformInfoCapabilitiesItem =
@@ -28,6 +28,7 @@ export type PlatformInfoCapabilitiesItem =
   | "message:react"
   | "message:reply"
   | "message:forward"
+  | "message:answer"
   | "media:image"
   | "media:video"
   | "media:gif"
@@ -35,6 +36,7 @@ export type PlatformInfoCapabilitiesItem =
   | "media:audio"
   | "thread:typing:send"
   | "thread:typing:receive"
+  | "thread:seen:receive"
   | "thread:message-requests"
   | "thread:delete:remote"
   | "directory:typeahead"
@@ -44,9 +46,13 @@ export type PlatformInfoCapabilitiesItem =
   | "thread:read:mutate"
   | "profile:follow"
   | "profile:unfollow"
+  | "profile:connect"
+  | "profile:connect:note"
+  | "profile:resolve:id"
+  | "profile:resolve:username"
   | (string & {});
 
-/** Limits checked before a send reaches the platform. */
+/** Limits checked before a request reaches the platform. */
 export interface PlatformInfoLimits {
   /** Maximum characters in a message, counting an emoji as one. Null when the platform sets none. */
   characters: number | null;
@@ -56,6 +62,8 @@ export interface PlatformInfoLimits {
   mediaBytes: number | null;
   /** Accepted formats per media kind: MIME types, families such as `image/*`, or extensions such as `.pdf`. A kind without an entry accepts nothing. Null accepts any format. */
   mediaTypes: PlatformInfoLimitsMediaTypes | null;
+  /** Maximum characters in the note of a connection request. Null when the platform sets none. */
+  connectNoteCharacters: number | null;
 }
 
 export interface PlatformInfoLimitsMediaTypes {
@@ -75,6 +83,7 @@ export interface PlatformInfoMutationWindows {
   "message:react"?: number;
   "message:reply"?: number;
   "message:forward"?: number;
+  "message:answer"?: number;
   "media:image"?: number;
   "media:video"?: number;
   "media:gif"?: number;
@@ -82,6 +91,7 @@ export interface PlatformInfoMutationWindows {
   "media:audio"?: number;
   "thread:typing:send"?: number;
   "thread:typing:receive"?: number;
+  "thread:seen:receive"?: number;
   "thread:message-requests"?: number;
   "thread:delete:remote"?: number;
   "directory:typeahead"?: number;
@@ -91,6 +101,10 @@ export interface PlatformInfoMutationWindows {
   "thread:read:mutate"?: number;
   "profile:follow"?: number;
   "profile:unfollow"?: number;
+  "profile:connect"?: number;
+  "profile:connect:note"?: number;
+  "profile:resolve:id"?: number;
+  "profile:resolve:username"?: number;
 }
 
 export interface PlatformInfoThreadState {
@@ -123,7 +137,16 @@ export interface InvalidRequestDetailsIssuesItem {
   message: string;
 }
 
-export type InvalidRequestDetailsIssuesItemPathItem = string | number;
+export type InvalidRequestDetailsIssuesItemPathItem =
+  | string
+  | number
+  | InvalidRequestDetailsIssuesItemPathItemString3;
+
+export type InvalidRequestDetailsIssuesItemPathItemString3 =
+  | "Infinity"
+  | "-Infinity"
+  | "NaN"
+  | (string & {});
 
 export interface RateLimitedDetails {
   window: RateLimitedDetailsWindow;
@@ -211,7 +234,7 @@ export interface AccountLink {
   platform: Platform;
   /** The ID the platform gives this object. Only meaningful next to its `platform`. */
   platformId: string;
-  /** The platform username without its display prefix. Lookups take this form. */
+  /** The platform username, without a display prefix such as `@`. */
   username: string | null;
   displayName: string | null;
   avatarUrl: string | null;
@@ -237,6 +260,7 @@ export type AccountLinkCapabilitiesItem =
   | "message:react"
   | "message:reply"
   | "message:forward"
+  | "message:answer"
   | "media:image"
   | "media:video"
   | "media:gif"
@@ -244,6 +268,7 @@ export type AccountLinkCapabilitiesItem =
   | "media:audio"
   | "thread:typing:send"
   | "thread:typing:receive"
+  | "thread:seen:receive"
   | "thread:message-requests"
   | "thread:delete:remote"
   | "directory:typeahead"
@@ -253,6 +278,10 @@ export type AccountLinkCapabilitiesItem =
   | "thread:read:mutate"
   | "profile:follow"
   | "profile:unfollow"
+  | "profile:connect"
+  | "profile:connect:note"
+  | "profile:resolve:id"
+  | "profile:resolve:username"
   | (string & {});
 
 export interface PlatformNotAvailableDetails {
@@ -266,11 +295,14 @@ export interface AccountLinksGetRequest {
 export type ContactsListRequestExpandItem = "status" | "tags" | "assignee";
 
 export interface ContactsListRequest {
-  platform: Platform;
-  /** Contacts with a profile of this platform ID. Give this or the other identity filter, repeating the key for up to 100. No match is an empty page. */
+  /** Contacts with a profile on these platforms. Defaults to every platform available to the team. `platformId` needs exactly one. Repeat the key to match any of several. */
+  platform?: Array<Platform>;
+  /** Contacts with a profile of this platform ID. Give one of `platformId`, `username` or `q`, repeating the key for up to 100. No match is an empty page. */
   platformId?: Array<string>;
-  /** Contacts with a profile of this username, without its display prefix. One username may match several contacts. Give this or the other identity filter, repeating the key for up to 100. No match is an empty page. */
+  /** Contacts with a profile of this username, without its display prefix. One username may match several contacts. Give one of `platformId`, `username` or `q`, repeating the key for up to 100. No match is an empty page. */
   username?: Array<string>;
+  /** Searches contact and profile names, usernames, emails and phone numbers. Not combinable with `platformId` or `username`. Results follow `createdAt`, not relevance, and can trail changes by a few seconds. */
+  q?: string;
   /** Related resources to embed next to their ID field, one path per key, at most 4. */
   expand?: Array<ContactsListRequestExpandItem>;
   /** Page size, from 1 to 100. Defaults to 50. */
@@ -296,7 +328,7 @@ export interface Contact {
   tagIds: Array<string>;
   notes: string | null;
   /** What the person is worth to the team, in the team's `currency`. */
-  valuation: number | null;
+  valuation: ContactValuation | null;
   /** The default assignee of this contact's threads that have none of their own. */
   assigneeId: string | null;
   createdAt: string;
@@ -312,7 +344,7 @@ export interface Profile {
   platform: Platform;
   /** The ID the platform gives this object. Only meaningful next to its `platform`. */
   platformId: string;
-  /** The platform username without its display prefix. Lookups take this form. */
+  /** The platform username, without a display prefix such as `@`. */
   username: string;
   /** The username as the platform displays it. Show this, and look up by `username`. */
   handle: string;
@@ -328,13 +360,13 @@ export interface Profile {
   isOrganization: boolean;
   /** The account's posts are visible only to approved followers. */
   isProtected: boolean;
-  followerCount: number | null;
-  followingCount: number | null;
-  postCount: number | null;
+  followerCount: ProfileFollowerCount | null;
+  followingCount: ProfileFollowingCount | null;
+  postCount: ProfilePostCount | null;
   /** On X, how many posts the user has liked. */
-  engagementCount: number | null;
+  engagementCount: ProfileEngagementCount | null;
   /** On X, how many lists include the profile. */
-  listedCount: number | null;
+  listedCount: ProfileListedCount | null;
   /** `suspended` by the platform, or `notFound` when deleted or deactivated. */
   accountStatus: ProfileAccountStatus;
   /** When the account was created on the platform. */
@@ -343,13 +375,40 @@ export interface Profile {
   /** When Inboxapp last stored a change to this profile. */
   updatedAt: string;
   platformData: ProfilePlatformData;
+  /** One entry per team account link that has interacted with the profile. */
+  relationships: Array<Relationship>;
 }
+
+export type ProfileFollowerCount = number | ProfileFollowerCountString;
+
+export type ProfileFollowerCountString = "Infinity" | "-Infinity" | "NaN" | (string & {});
+
+export type ProfileFollowingCount = number | ProfileFollowingCountString;
+
+export type ProfileFollowingCountString = "Infinity" | "-Infinity" | "NaN" | (string & {});
+
+export type ProfilePostCount = number | ProfilePostCountString;
+
+export type ProfilePostCountString = "Infinity" | "-Infinity" | "NaN" | (string & {});
+
+/** On X, how many posts the user has liked. */
+export type ProfileEngagementCount = number | ProfileEngagementCountString;
+
+export type ProfileEngagementCountString = "Infinity" | "-Infinity" | "NaN" | (string & {});
+
+/** On X, how many lists include the profile. */
+export type ProfileListedCount = number | ProfileListedCountString;
+
+export type ProfileListedCountString = "Infinity" | "-Infinity" | "NaN" | (string & {});
 
 /** `suspended` by the platform, or `notFound` when deleted or deactivated. */
 export type ProfileAccountStatus = "active" | "suspended" | "notFound" | (string & {});
 
 /** Fields only one platform has, tagged by `_tag`. Ignore tags you don't know. */
-export type ProfilePlatformData = ProfilePlatformDataTwitter | ProfilePlatformDataOther;
+export type ProfilePlatformData =
+  | ProfilePlatformDataTwitter
+  | ProfilePlatformDataLinkedin
+  | ProfilePlatformDataOther;
 
 export interface ProfilePlatformDataTwitter {
   _tag: "twitter";
@@ -376,11 +435,85 @@ export interface ProfilePlatformDataTwitterUrlEntitiesItem {
   indices: [number, number];
 }
 
+export interface ProfilePlatformDataLinkedin {
+  _tag: "linkedin";
+  profileUrn?: string | null;
+  kind?: ProfilePlatformDataLinkedinKind | null;
+  memberBadge?: ProfilePlatformDataLinkedinMemberBadge | null;
+  bannerUrl?: string | null;
+  bannerSize?: ProfilePlatformDataLinkedinBannerSize | null;
+  hydratedAt?: string | null;
+  imageAssetId?: string | null;
+  connectionsCount?: number | null;
+  currentRole?: string | null;
+  currentRoleStart?: ProfilePlatformDataLinkedinCurrentRoleStart | null;
+  currentCompanyName?: string | null;
+  currentCompanyUrn?: string | null;
+  topSchoolName?: string | null;
+  topSchoolUrn?: string | null;
+  topSchoolDegree?: string | null;
+  topSchoolPeriod?: string | null;
+  employeeCount?: number | null;
+  employeeCountRange?: ProfilePlatformDataLinkedinEmployeeCountRange | null;
+  industry?: string | null;
+  pageKind?: ProfilePlatformDataLinkedinPageKind | null;
+  companyUrn?: string | null;
+  currentCompanyLogoUrl?: string | null;
+  topSchoolLogoUrl?: string | null;
+}
+
+export type ProfilePlatformDataLinkedinKind = "member" | "organization" | (string & {});
+
+export type ProfilePlatformDataLinkedinMemberBadge = "premium" | "verified" | (string & {});
+
+export interface ProfilePlatformDataLinkedinBannerSize {
+  width: number;
+  height: number;
+}
+
+export interface ProfilePlatformDataLinkedinCurrentRoleStart {
+  year: number;
+  month: number | null;
+}
+
+export interface ProfilePlatformDataLinkedinEmployeeCountRange {
+  start: number;
+  end: number | null;
+}
+
+export type ProfilePlatformDataLinkedinPageKind = "company" | "school" | "showcase" | (string & {});
+
 /** A platform the team has enabled beyond those every team can use. Its fields are not listed here. */
 export interface ProfilePlatformDataOther {
   _tag: string;
   [key: string]: unknown;
 }
+
+/** What one of the team's account links knows about a profile. */
+export interface Relationship {
+  accountLinkId: string;
+  /** How close the profile is to the account link on the platform's network, as last observed. `null` when never observed. */
+  degree: RelationshipDegree | null;
+  /** The account link's pending connection request. `null` once the profile is seen accepting it or the request is withdrawn, or when none was sent. */
+  connectionRequest: RelationshipConnectionRequest | null;
+}
+
+export type RelationshipDegree =
+  | "self"
+  | "first"
+  | "second"
+  | "third"
+  | "outOfNetwork"
+  | (string & {});
+
+export interface RelationshipConnectionRequest {
+  sentAt: string;
+}
+
+/** What the person is worth to the team, in the team's `currency`. */
+export type ContactValuation = number | ContactValuationString;
+
+export type ContactValuationString = "Infinity" | "-Infinity" | "NaN" | (string & {});
 
 /** A pipeline stage on the team's board. A contact has at most one status. */
 export interface Status {
@@ -429,6 +562,185 @@ export interface ContactsRemoveTagRequest {
   contactId: Cuid2;
   /** A tag, by ID or by name. Names match ignoring case and accents. When a value is one tag's ID and another's name, the ID wins. */
   tagRef: string;
+}
+
+/** `contacts`, the default, searches people each account already messages. `network` also searches beyond them, where the platform separates the two. */
+export type PeopleSearchRequestReach = "contacts" | "network";
+
+export interface PeopleSearchRequest {
+  /** Searches these platforms. Defaults to every available platform. With `accountLinkId`, keeps only the account links on these platforms. Repeat the key to match any of several. */
+  platform?: Array<Platform>;
+  /** Searches from these account links. Each platform is searched once, from the oldest account link given on it; IDs that match no account link are ignored. Without it, each platform is searched from its oldest active account link that can search. Repeat the key to match any of several. */
+  accountLinkId?: Array<Cuid2>;
+  /** A name or username, as typed into the platform's own people search. */
+  q: string;
+  /** `contacts`, the default, searches people each account already messages. `network` also searches beyond them, where the platform separates the two. */
+  reach?: PeopleSearchRequestReach;
+  /** `true` fetches and stores every result Inboxapp hasn't stored yet, so each comes back as a full profile. A result that can't be fetched or stored is left out. Slower. Defaults to `false`. */
+  enrich?: boolean;
+}
+
+/** Every searched account link's results in one list: closest name or username match first, then people the account already talks to or is connected with, then verified, then each platform's own order. Not paginated. */
+export interface PersonList {
+  data: Array<Person>;
+  /** The searched account links that returned nothing. When every one fails, the request fails with the first one's error instead. */
+  failures: Array<PeopleSearchFailure>;
+}
+
+/** A person one of the searched account links found. */
+export interface Person {
+  /** The account link that found this person. `threadId`, `canMessage`, `degree`, `closeness` and `target` are its view. */
+  accountLinkId: string;
+  profile: PersonProfile;
+  /** The team's contact holding this profile, if any. */
+  contactId: string | null;
+  /** The account link's latest thread with this profile, if any. */
+  threadId: string | null;
+  /** The platform's hint that the account link can message this person, `null` when the platform doesn't say. A send can still fail with `recipientUnavailable`. */
+  canMessage: boolean | null;
+  /** How close the person is to the account link on the platform's network, as the search states it. `null` when it states none. */
+  degree: PersonDegree | null;
+  /** `connected` for a direct tie such as a follow or 1st-degree connection, `near` for a shared one such as mutuals or 2nd degree. */
+  closeness: PersonCloseness;
+  /** Pass as is as the `target` of Send message or Send connection request to reach this person from the account link. */
+  target: PersonTarget;
+}
+
+export type PersonProfile = Profile | ProfileHit;
+
+/** A profile the platform's search returned that Inboxapp hasn't stored, with only what identifies it. */
+export interface ProfileHit {
+  /** Inboxapp hasn't stored this profile. Search with `enrich=true` to get only stored profiles. */
+  id: null;
+  platform: Platform;
+  /** The ID the platform gives this object. Only meaningful next to its `platform`. */
+  platformId: string;
+  /** The platform username, without a display prefix such as `@`. */
+  username: string | null;
+  /** The username as the platform displays it. Show this, and look up by `username`. */
+  handle: string;
+  displayName: string;
+  avatarUrl: string | null;
+  /** The platform vouches for the account, such as with an X badge. Platform-specific badges are in `platformData`. */
+  verified: boolean;
+  /** A company or page rather than a person. */
+  isOrganization: boolean;
+  profileUrl: string | null;
+  platformData: ProfilePlatformData;
+}
+
+export type PersonDegree = "self" | "first" | "second" | "third" | "outOfNetwork" | (string & {});
+
+/** `connected` for a direct tie such as a follow or 1st-degree connection, `near` for a shared one such as mutuals or 2nd degree. */
+export type PersonCloseness = "connected" | "near" | "none" | (string & {});
+
+/** Pass as is as the `target` of Send message or Send connection request to reach this person from the account link. */
+export type PersonTarget = PersonTargetProfileByPlatformID | PersonTargetProfileByUsername;
+
+export interface PersonTargetProfileByPlatformID {
+  type: "profile";
+  accountLinkId: Cuid2;
+  platform: Platform;
+  /** The person's ID on the platform. Reaching someone Inboxapp hasn't stored needs the account link's `profile:resolve:id`. */
+  platformId: string;
+}
+
+export interface PersonTargetProfileByUsername {
+  type: "profile";
+  accountLinkId: Cuid2;
+  platform: Platform;
+  /** The person's username on the platform, without a display prefix such as `@`. On LinkedIn, what follows `/in/` in their profile URL: the vanity name or the `ACoA…` profile ID. Reaching someone Inboxapp hasn't stored needs the account link's `profile:resolve:username`. */
+  username: string;
+}
+
+/** An account link whose search failed, so `data` has nothing from it. */
+export interface PeopleSearchFailure {
+  accountLinkId: string;
+  /** The error code searching from this account link alone returns. */
+  code: PeopleSearchFailureCode;
+  message: string;
+}
+
+/** The error code searching from this account link alone returns. */
+export type PeopleSearchFailureCode =
+  | "accountLinkNotFound"
+  | "accountLinkDisconnected"
+  | "integrationSetupRequired"
+  | "capabilityNotSupported"
+  | "platformRateLimited"
+  | "peopleSearchRateLimited"
+  | "platformError"
+  | "platformUnavailable"
+  | (string & {});
+
+export interface PlanRequiredDetails {
+  feature: string;
+}
+
+export interface AccountLinkDisconnectedDetails {
+  accountLinkId: string;
+  /** `active` sends and syncs. `paused` is stopped for the reasons in `pauseReasons`, and resumes once none remain. `offline` lost its connection to the platform and must be reconnected in Inboxapp. */
+  status: AccountLinkDisconnectedDetailsStatus;
+}
+
+/** `active` sends and syncs. `paused` is stopped for the reasons in `pauseReasons`, and resumes once none remain. `offline` lost its connection to the platform and must be reconnected in Inboxapp. */
+export type AccountLinkDisconnectedDetailsStatus = "active" | "offline" | "paused" | (string & {});
+
+export interface IntegrationSetupRequiredDetails {
+  accountLinkId: string;
+}
+
+export interface CapabilityNotSupportedDetails {
+  capability: CapabilityNotSupportedDetailsCapability;
+}
+
+export type CapabilityNotSupportedDetailsCapability =
+  | "message:send"
+  | "message:edit"
+  | "message:delete:self"
+  | "message:unsend"
+  | "message:react"
+  | "message:reply"
+  | "message:forward"
+  | "message:answer"
+  | "media:image"
+  | "media:video"
+  | "media:gif"
+  | "media:file"
+  | "media:audio"
+  | "thread:typing:send"
+  | "thread:typing:receive"
+  | "thread:seen:receive"
+  | "thread:message-requests"
+  | "thread:delete:remote"
+  | "directory:typeahead"
+  | "thread:archive:observe"
+  | "thread:archive:mutate"
+  | "thread:read:observe"
+  | "thread:read:mutate"
+  | "profile:follow"
+  | "profile:unfollow"
+  | "profile:connect"
+  | "profile:connect:note"
+  | "profile:resolve:id"
+  | "profile:resolve:username"
+  | (string & {});
+
+export interface PeopleSearchRateLimitedDetails {
+  accountLinkId: string;
+  window: PeopleSearchRateLimitedDetailsWindow;
+  limit: number;
+  resetAt: string;
+}
+
+export type PeopleSearchRateLimitedDetailsWindow = "minute" | "hour" | "day" | (string & {});
+
+export interface PlatformRateLimitedDetails {
+  retryAfterSeconds: number | null;
+}
+
+export interface PlatformUnavailableDetails {
+  retryAfterSeconds: number | null;
 }
 
 /** Defaults to `inbox`, threads that are neither archived nor requests. `noReply` is the `inbox` threads whose latest activity is inbound. `requests` holds unarchived threads where `isRequest` is true. `archived` includes requests. `all` spans every folder. Every other filter narrows the folder. */
@@ -497,7 +809,7 @@ export interface Thread {
   /** Whether the platform needs the account to accept the conversation before replying normally. `unknown` when the platform doesn't say. Independent of `isRequest`. */
   acceptanceState: ThreadAcceptanceState;
   archived: boolean;
-  /** Marked unread in Inboxapp. A thread no one has opened yet is not unread. */
+  /** Marked unread in Inboxapp for the team owner, whose view the API takes. A thread no one has opened yet is not unread. */
   unread: boolean;
   /** Capabilities the platform disables in this conversation, on top of the account link's `capabilities`. Using one fails with `threadRestricted`. */
   restrictions: Array<ThreadRestrictionsItem>;
@@ -507,6 +819,8 @@ export interface Thread {
   typingIndicators: ThreadTypingIndicators;
   lastMessage: LastMessage | null;
   activity: ThreadActivity | null;
+  seen: ThreadSeen | null;
+  delivered: ThreadDelivered | null;
   createdAt: string;
   accountLink?: AccountLink;
   profile?: Profile;
@@ -525,6 +839,7 @@ export type ThreadRestrictionsItem =
   | "message:react"
   | "message:reply"
   | "message:forward"
+  | "message:answer"
   | "media:image"
   | "media:video"
   | "media:gif"
@@ -532,6 +847,7 @@ export type ThreadRestrictionsItem =
   | "media:audio"
   | "thread:typing:send"
   | "thread:typing:receive"
+  | "thread:seen:receive"
   | "thread:message-requests"
   | "thread:delete:remote"
   | "directory:typeahead"
@@ -541,6 +857,10 @@ export type ThreadRestrictionsItem =
   | "thread:read:mutate"
   | "profile:follow"
   | "profile:unfollow"
+  | "profile:connect"
+  | "profile:connect:note"
+  | "profile:resolve:id"
+  | "profile:resolve:username"
   | (string & {});
 
 /** Whether Inboxapp sends typing indicators to the platform while someone composes in this thread. `teamDefault` follows the team's setting. */
@@ -561,13 +881,39 @@ export type LastMessageDirection = "inbound" | "outbound" | (string & {});
 export interface ThreadActivity {
   /** One line as the inbox shows it, such as the message text or `You reacted with 👍`. Null when there is nothing to show. */
   preview: string | null;
+  /** What `preview` describes when the latest message is rich content, which the inbox shows as an icon beside it. Null for anything else, such as plain text or a reaction. */
+  previewKind: ThreadActivityPreviewKind | null;
   /** `outbound` when the account link acted. */
   direction: ThreadActivityDirection;
   at: string;
 }
 
+export type ThreadActivityPreviewKind =
+  | "contact"
+  | "location"
+  | "poll"
+  | "event"
+  | "videoCall"
+  | "voiceCall"
+  | "disappearingTimer"
+  | (string & {});
+
 /** `outbound` when the account link acted. */
 export type ThreadActivityDirection = "inbound" | "outbound" | (string & {});
+
+/** When the profile last read the account link's messages, on platforms with `thread:seen:receive`. Null until they have. */
+export interface ThreadSeen {
+  /** The latest of the account link's messages the profile has seen. Every earlier message counts as seen too. */
+  messageId: string;
+  at: string;
+}
+
+/** When the account link's messages last reached the profile's device, on platforms that report delivery. Null until they have, or when the platform doesn't report it. */
+export interface ThreadDelivered {
+  /** The latest of the account link's messages known to have reached the profile's device. Every earlier message counts as delivered too, as does any message `seen` covers, even when this names an earlier one. */
+  messageId: string;
+  at: string;
+}
 
 export type ThreadsGetRequestExpandItem = "profile" | "contact" | "accountLink" | "assignee";
 
@@ -584,7 +930,7 @@ export interface ThreadsUpdateRequest {
   threadId: Cuid2;
   /** Also applied on the platform when the account link has `thread:archive:mutate`. */
   archived?: boolean;
-  /** Also applied on the platform when the account link has `thread:read:mutate`. */
+  /** Marks the thread read or unread for the team owner. Also applied on the platform when the account link has `thread:read:mutate`. */
   unread?: boolean;
   /** The thread's own assignee. Null falls back to the contact's default. */
   assigneeId?: Cuid2 | null;
@@ -603,57 +949,6 @@ export interface ThreadDeletion {
 
 /** `remoteAndLocal` when the conversation was also deleted on the platform. `local` when only Inboxapp's copy was, because the platform can't delete it or it never existed there. */
 export type ThreadDeletionScope = "remoteAndLocal" | "local" | (string & {});
-
-export interface AccountLinkDisconnectedDetails {
-  accountLinkId: string;
-  /** `active` sends and syncs. `paused` is stopped for the reasons in `pauseReasons`, and resumes once none remain. `offline` lost its connection to the platform and must be reconnected in Inboxapp. */
-  status: AccountLinkDisconnectedDetailsStatus;
-}
-
-/** `active` sends and syncs. `paused` is stopped for the reasons in `pauseReasons`, and resumes once none remain. `offline` lost its connection to the platform and must be reconnected in Inboxapp. */
-export type AccountLinkDisconnectedDetailsStatus = "active" | "offline" | "paused" | (string & {});
-
-export interface IntegrationSetupRequiredDetails {
-  accountLinkId: string;
-}
-
-export interface CapabilityNotSupportedDetails {
-  capability: CapabilityNotSupportedDetailsCapability;
-}
-
-export type CapabilityNotSupportedDetailsCapability =
-  | "message:send"
-  | "message:edit"
-  | "message:delete:self"
-  | "message:unsend"
-  | "message:react"
-  | "message:reply"
-  | "message:forward"
-  | "media:image"
-  | "media:video"
-  | "media:gif"
-  | "media:file"
-  | "media:audio"
-  | "thread:typing:send"
-  | "thread:typing:receive"
-  | "thread:message-requests"
-  | "thread:delete:remote"
-  | "directory:typeahead"
-  | "thread:archive:observe"
-  | "thread:archive:mutate"
-  | "thread:read:observe"
-  | "thread:read:mutate"
-  | "profile:follow"
-  | "profile:unfollow"
-  | (string & {});
-
-export interface PlatformRateLimitedDetails {
-  retryAfterSeconds: number | null;
-}
-
-export interface PlatformUnavailableDetails {
-  retryAfterSeconds: number | null;
-}
 
 export interface ThreadsTypingRequest {
   threadId: Cuid2;
@@ -740,7 +1035,7 @@ export type MessageSentBy =
   | MessageSentByMember
   | MessageSentByAgent
   | MessageSentByCampaign
-  | MessageSentByApi;
+  | MessageSentByAPIToken;
 
 /** A team member sent it from Inboxapp. */
 export interface MessageSentByMember {
@@ -774,13 +1069,13 @@ export interface MessageSentByCampaign {
 }
 
 /** An API token sent it. `tokenId` is null on messages sent before tokens were recorded, and `token` is absent once the token is deleted. */
-export interface MessageSentByApi {
+export interface MessageSentByAPIToken {
   type: "api";
   tokenId: string | null;
-  token?: MessageSentByApiToken;
+  token?: MessageSentByAPITokenToken;
 }
 
-export interface MessageSentByApiToken {
+export interface MessageSentByAPITokenToken {
   id: string;
   name: string;
 }
@@ -825,7 +1120,7 @@ export interface MessageEntitiesPostSharesItemIndices {
 }
 
 export interface MessageEntitiesMentionsItem {
-  /** The platform username without its display prefix. Lookups take this form. */
+  /** The platform username, without a display prefix such as `@`. */
   username: string;
   displayName: string | null;
   /** The ID the platform gives this object. Only meaningful next to its `platform`. */
@@ -892,13 +1187,13 @@ export interface AttachmentMedia {
   kind: AttachmentMediaKind;
   filename: string | null;
   contentType: string | null;
-  sizeBytes: number | null;
-  width: number | null;
-  height: number | null;
+  sizeBytes: AttachmentMediaSizeBytes | null;
+  width: AttachmentMediaWidth | null;
+  height: AttachmentMediaHeight | null;
   /** Width divided by height. */
-  aspectRatio: number | null;
+  aspectRatio: AttachmentMediaAspectRatio | null;
   /** Video and audio only. */
-  durationSeconds: number | null;
+  durationSeconds: AttachmentMediaDurationSeconds | null;
   /** `ready` once `url` is usable. `pending` and `processing` while Inboxapp stores a copy: resolve the attachment again later. `failed` when Inboxapp gave up. */
   status: AttachmentMediaStatus;
   /** Set exactly when `status` is `ready`. */
@@ -911,6 +1206,28 @@ export interface AttachmentMedia {
 
 export type AttachmentMediaKind = "image" | "gif" | "video" | "audio" | "file" | (string & {});
 
+export type AttachmentMediaSizeBytes = number | AttachmentMediaSizeBytesString;
+
+export type AttachmentMediaSizeBytesString = "Infinity" | "-Infinity" | "NaN" | (string & {});
+
+export type AttachmentMediaWidth = number | AttachmentMediaWidthString;
+
+export type AttachmentMediaWidthString = "Infinity" | "-Infinity" | "NaN" | (string & {});
+
+export type AttachmentMediaHeight = number | AttachmentMediaHeightString;
+
+export type AttachmentMediaHeightString = "Infinity" | "-Infinity" | "NaN" | (string & {});
+
+/** Width divided by height. */
+export type AttachmentMediaAspectRatio = number | AttachmentMediaAspectRatioString;
+
+export type AttachmentMediaAspectRatioString = "Infinity" | "-Infinity" | "NaN" | (string & {});
+
+/** Video and audio only. */
+export type AttachmentMediaDurationSeconds = number | AttachmentMediaDurationSecondsString;
+
+export type AttachmentMediaDurationSecondsString = "Infinity" | "-Infinity" | "NaN" | (string & {});
+
 /** `ready` once `url` is usable. `pending` and `processing` while Inboxapp stores a copy: resolve the attachment again later. `failed` when Inboxapp gave up. */
 export type AttachmentMediaStatus = "ready" | "pending" | "processing" | "failed" | (string & {});
 
@@ -918,9 +1235,17 @@ export interface AttachmentMediaPoster {
   url: string;
   /** When `url` stops working. Null for URLs that don't expire. Get a fresh URL from `GET /messages/{messageId}/attachments/{index}`. */
   expiresAt: string | null;
-  width: number | null;
-  height: number | null;
+  width: AttachmentMediaPosterWidth | null;
+  height: AttachmentMediaPosterHeight | null;
 }
+
+export type AttachmentMediaPosterWidth = number | AttachmentMediaPosterWidthString;
+
+export type AttachmentMediaPosterWidthString = "Infinity" | "-Infinity" | "NaN" | (string & {});
+
+export type AttachmentMediaPosterHeight = number | AttachmentMediaPosterHeightString;
+
+export type AttachmentMediaPosterHeightString = "Infinity" | "-Infinity" | "NaN" | (string & {});
 
 /** The preview of a link in the message. A message has at most one. */
 export interface AttachmentCard {
@@ -984,12 +1309,19 @@ export interface ReactionAuthorUnknown {
 }
 
 /** Fields only one platform has, tagged by `_tag`. Ignore tags you don't know. */
-export type MessagePlatformData = MessagePlatformDataTwitter | MessagePlatformDataOther;
+export type MessagePlatformData =
+  | MessagePlatformDataTwitter
+  | MessagePlatformDataLinkedin
+  | MessagePlatformDataOther;
 
 export interface MessagePlatformDataTwitter {
   _tag: "twitter";
   /** An end-to-end encrypted X Chat message. */
   encrypted: boolean;
+}
+
+export interface MessagePlatformDataLinkedin {
+  _tag: "linkedin";
 }
 
 /** A platform the team has enabled beyond those every team can use. Its fields are not listed here. */
@@ -1040,6 +1372,7 @@ export type ThreadRestrictedDetailsCapability =
   | "message:react"
   | "message:reply"
   | "message:forward"
+  | "message:answer"
   | "media:image"
   | "media:video"
   | "media:gif"
@@ -1047,6 +1380,7 @@ export type ThreadRestrictedDetailsCapability =
   | "media:audio"
   | "thread:typing:send"
   | "thread:typing:receive"
+  | "thread:seen:receive"
   | "thread:message-requests"
   | "thread:delete:remote"
   | "directory:typeahead"
@@ -1056,6 +1390,10 @@ export type ThreadRestrictedDetailsCapability =
   | "thread:read:mutate"
   | "profile:follow"
   | "profile:unfollow"
+  | "profile:connect"
+  | "profile:connect:note"
+  | "profile:resolve:id"
+  | "profile:resolve:username"
   | (string & {});
 
 export interface MutationWindowClosedDetails {
@@ -1071,6 +1409,7 @@ export type MutationWindowClosedDetailsCapability =
   | "message:react"
   | "message:reply"
   | "message:forward"
+  | "message:answer"
   | "media:image"
   | "media:video"
   | "media:gif"
@@ -1078,6 +1417,7 @@ export type MutationWindowClosedDetailsCapability =
   | "media:audio"
   | "thread:typing:send"
   | "thread:typing:receive"
+  | "thread:seen:receive"
   | "thread:message-requests"
   | "thread:delete:remote"
   | "directory:typeahead"
@@ -1087,6 +1427,10 @@ export type MutationWindowClosedDetailsCapability =
   | "thread:read:mutate"
   | "profile:follow"
   | "profile:unfollow"
+  | "profile:connect"
+  | "profile:connect:note"
+  | "profile:resolve:id"
+  | "profile:resolve:username"
   | (string & {});
 
 export interface MessageNotModifiableDetails {
@@ -1119,7 +1463,8 @@ export type MessageDeletionScope = "self" | "all" | (string & {});
 export type SendRequestTarget =
   | SendRequestTargetThread
   | SendRequestTargetContact
-  | SendRequestTargetProfile;
+  | SendRequestTargetProfileByPlatformID
+  | SendRequestTargetProfileByUsername;
 
 /** An existing thread. */
 export interface SendRequestTargetThread {
@@ -1136,14 +1481,25 @@ export interface SendRequestTargetContact {
 }
 
 /** A platform user, in its existing thread or a new one. Without the Advanced API add-on, the profile must already belong to one of the team's contacts. */
-export interface SendRequestTargetProfile {
+export interface SendRequestTargetProfileByPlatformID {
   type: "profile";
   /** The account link to send from. */
   accountLinkId: Cuid2;
   /** Must be the account link's platform. */
   platform: Platform;
-  /** The ID the platform gives this object. Only meaningful next to its `platform`. */
+  /** The person's ID on the platform. Reaching someone Inboxapp hasn't stored needs the account link's `profile:resolve:id`. */
   platformId: string;
+}
+
+/** A platform user, in its existing thread or a new one. Without the Advanced API add-on, the profile must already belong to one of the team's contacts. */
+export interface SendRequestTargetProfileByUsername {
+  type: "profile";
+  /** The account link to send from. */
+  accountLinkId: Cuid2;
+  /** Must be the account link's platform. */
+  platform: Platform;
+  /** The person's username on the platform, without a display prefix such as `@`. On LinkedIn, what follows `/in/` in their profile URL: the vanity name or the `ACoA…` profile ID. Reaching someone Inboxapp hasn't stored needs the account link's `profile:resolve:username`. */
+  username: string;
 }
 
 export interface MessagesSendRequest {
@@ -1154,10 +1510,6 @@ export interface MessagesSendRequest {
   content: string;
   /** A message in the thread this send lands in, to reply to. */
   replyToMessageId?: Cuid2;
-}
-
-export interface PlanRequiredDetails {
-  feature: string;
 }
 
 export interface SendInProgressDetails {
@@ -1206,14 +1558,14 @@ export type MessageHistoryVersionsItemOrigin = "inbox" | "platform" | "api" | (s
 
 export interface MessageHistoryDeletion {
   deletedAt: string;
-  /** `self` deletes for the account link only, which needs `message:delete:self`. `all` unsends for every participant, which needs `message:unsend`. */
+  /** `self` was deleted for the account link only. `all` was unsent for every participant. `expired` disappeared when its disappearing-messages timer ran out. */
   scope: MessageHistoryDeletionScope;
   /** Where the change was made: `inbox` in the app, `api` through this API, `platform` directly on the platform. Null on older records. */
   origin: MessageHistoryDeletionOrigin | null;
 }
 
-/** `self` deletes for the account link only, which needs `message:delete:self`. `all` unsends for every participant, which needs `message:unsend`. */
-export type MessageHistoryDeletionScope = "self" | "all" | (string & {});
+/** `self` was deleted for the account link only. `all` was unsent for every participant. `expired` disappeared when its disappearing-messages timer ran out. */
+export type MessageHistoryDeletionScope = "self" | "all" | "expired" | (string & {});
 
 export type MessageHistoryDeletionOrigin = "inbox" | "platform" | "api" | (string & {});
 
@@ -1241,6 +1593,73 @@ export interface MessagesAttachmentRequest {
   messageId: Cuid2;
   index: number;
 }
+
+export type ConnectionRequestCreateTarget =
+  | ConnectionRequestCreateTargetThread
+  | ConnectionRequestCreateTargetContact
+  | ConnectionRequestCreateTargetProfileByPlatformID
+  | ConnectionRequestCreateTargetProfileByUsername;
+
+/** The profile of an existing one-to-one thread, from the thread's account link. */
+export interface ConnectionRequestCreateTargetThread {
+  type: "thread";
+  threadId: Cuid2;
+}
+
+/** The contact's profile on the account link's platform. Fails with `recipientUnavailable` when the contact has none there, and `profileAmbiguous` when it has several. */
+export interface ConnectionRequestCreateTargetContact {
+  type: "contact";
+  /** The account link to send the request from. */
+  accountLinkId: Cuid2;
+  contactId: Cuid2;
+}
+
+/** A platform user. Without the Advanced API add-on, the profile must already belong to one of the team's contacts. */
+export interface ConnectionRequestCreateTargetProfileByPlatformID {
+  type: "profile";
+  /** The account link to send the request from. */
+  accountLinkId: Cuid2;
+  /** Must be the account link's platform. */
+  platform: Platform;
+  /** The person's ID on the platform. Reaching someone Inboxapp hasn't stored needs the account link's `profile:resolve:id`. */
+  platformId: string;
+}
+
+/** A platform user. Without the Advanced API add-on, the profile must already belong to one of the team's contacts. */
+export interface ConnectionRequestCreateTargetProfileByUsername {
+  type: "profile";
+  /** The account link to send the request from. */
+  accountLinkId: Cuid2;
+  /** Must be the account link's platform. */
+  platform: Platform;
+  /** The person's username on the platform, without a display prefix such as `@`. On LinkedIn, what follows `/in/` in their profile URL: the vanity name or the `ACoA…` profile ID. Reaching someone Inboxapp hasn't stored needs the account link's `profile:resolve:username`. */
+  username: string;
+}
+
+export interface RelationshipsConnectRequest {
+  target: ConnectionRequestCreateTarget;
+  /** Up to the platform's `limits.connectNoteCharacters`. Needs `profile:connect:note`, and fails with `connectionRefused` once the account has no notes left. */
+  note?: string;
+}
+
+/** A connection request the platform accepted for delivery. */
+export interface ConnectionRequest {
+  accountLinkId: string;
+  profileId: string;
+  note: string | null;
+}
+
+export interface ConnectionRefusedDetails {
+  /** `notAllowed` when the profile can't be invited right now, such as when already connected or invited. `noteAllowanceSpent` when the account has no notes left; send without one. */
+  reason: ConnectionRefusedDetailsReason;
+}
+
+/** `notAllowed` when the profile can't be invited right now, such as when already connected or invited. `noteAllowanceSpent` when the account has no notes left; send without one. */
+export type ConnectionRefusedDetailsReason =
+  | "notAllowed"
+  | "noteTooLong"
+  | "noteAllowanceSpent"
+  | (string & {});
 
 export interface TagsListRequest {}
 
@@ -1339,6 +1758,7 @@ export type EventsListRequestTypeItem =
   | "message.deleted"
   | "message.reactionAdded"
   | "message.reactionRemoved"
+  | "message.seen"
   | "contact.statusChanged"
   | "contact.tagsChanged"
   | "contact.notesChanged"
@@ -1357,7 +1777,11 @@ export type EventsListRequestTypeItem =
   | "campaign.completed"
   | "target.contacted"
   | "target.followUpSent"
-  | "target.replied";
+  | "target.replied"
+  | "connectionRequest.sent"
+  | "connectionRequest.accepted"
+  | "connectionRequest.withdrawn"
+  | "follower.created";
 
 export interface EventsListRequest {
   /** Exclusive. A webhook's `seq` resumes right after it. Omit to start at the oldest retained event. */
@@ -1371,7 +1795,7 @@ export interface EventsListRequest {
 export interface EventPage {
   data: Array<EventPageDataItem>;
   /** The last sequence number read, including events this page leaves out. Null when nothing was read. Pass it as `afterSeq` to continue. */
-  lastSeq: number | null;
+  lastSeq: EventPageLastSeq | null;
   hasMore: boolean;
 }
 
@@ -1389,6 +1813,7 @@ export type EventPageDataItem =
   | MessageDeletedEvent
   | MessageReactionAddedEvent
   | MessageReactionRemovedEvent
+  | MessageSeenEvent
   | ContactStatusChangedEvent
   | ContactTagsChangedEvent
   | ContactNotesChangedEvent
@@ -1407,7 +1832,11 @@ export type EventPageDataItem =
   | CampaignCompletedEvent
   | TargetContactedEvent
   | TargetFollowUpSentEvent
-  | TargetRepliedEvent;
+  | TargetRepliedEvent
+  | ConnectionRequestSentEvent
+  | ConnectionRequestAcceptedEvent
+  | ConnectionRequestWithdrawnEvent
+  | FollowerCreatedEvent;
 
 export interface ThreadCreatedEvent {
   id: string;
@@ -1623,10 +2052,12 @@ export interface MessageDeletedEventObject {
 
 export interface MessageDeletedEventData {
   threadId: string;
+  /** `self` was deleted for the account link only. `all` was unsent for every participant. `expired` disappeared when its disappearing-messages timer ran out. */
   scope: MessageDeletedEventDataScope;
 }
 
-export type MessageDeletedEventDataScope = "self" | "all" | (string & {});
+/** `self` was deleted for the account link only. `all` was unsent for every participant. `expired` disappeared when its disappearing-messages timer ran out. */
+export type MessageDeletedEventDataScope = "self" | "all" | "expired" | (string & {});
 
 export interface MessageReactionAddedEvent {
   id: string;
@@ -1673,6 +2104,31 @@ export interface MessageReactionRemovedEventData {
   emoji: string;
   authorPlatformId: string;
 }
+
+export interface MessageSeenEvent {
+  id: string;
+  seq: number;
+  type: "message.seen";
+  apiVersion: "2";
+  createdAt: string;
+  object: MessageSeenEventObject;
+  data: MessageSeenEventData;
+}
+
+export interface MessageSeenEventObject {
+  type: "message";
+  id: string;
+  /** The object's path under the API; 404 once it's deleted. */
+  url: string;
+}
+
+export interface MessageSeenEventData {
+  threadId: string;
+  seenByPlatformId: string;
+  seenAt: IsoDateTime;
+}
+
+export type IsoDateTime = string;
 
 export interface ContactStatusChangedEvent {
   id: string;
@@ -1755,8 +2211,18 @@ export interface ContactValuationChangedEventObject {
 }
 
 export interface ContactValuationChangedEventData {
-  valuation: number | null;
+  valuation: ContactValuationChangedEventDataValuation | null;
 }
+
+export type ContactValuationChangedEventDataValuation =
+  | number
+  | ContactValuationChangedEventDataValuationString;
+
+export type ContactValuationChangedEventDataValuationString =
+  | "Infinity"
+  | "-Infinity"
+  | "NaN"
+  | (string & {});
 
 export interface ContactAssigneeChangedEvent {
   id: string;
@@ -1987,8 +2453,16 @@ export interface TargetContactedEventData {
   threadId: string;
   messageId: string;
   contactId: string | null;
-  stepNumber: number | null;
+  stepNumber: TargetContactedEventDataStepNumber | null;
 }
+
+export type TargetContactedEventDataStepNumber = number | TargetContactedEventDataStepNumberString;
+
+export type TargetContactedEventDataStepNumberString =
+  | "Infinity"
+  | "-Infinity"
+  | "NaN"
+  | (string & {});
 
 export interface TargetFollowUpSentEvent {
   id: string;
@@ -2011,8 +2485,18 @@ export interface TargetFollowUpSentEventData {
   threadId: string;
   messageId: string;
   contactId: string | null;
-  stepNumber: number | null;
+  stepNumber: TargetFollowUpSentEventDataStepNumber | null;
 }
+
+export type TargetFollowUpSentEventDataStepNumber =
+  | number
+  | TargetFollowUpSentEventDataStepNumberString;
+
+export type TargetFollowUpSentEventDataStepNumberString =
+  | "Infinity"
+  | "-Infinity"
+  | "NaN"
+  | (string & {});
 
 export interface TargetRepliedEvent {
   id: string;
@@ -2035,8 +2519,103 @@ export interface TargetRepliedEventData {
   threadId: string;
   messageId: string;
   contactId: string | null;
-  stepNumber: number | null;
+  stepNumber: TargetRepliedEventDataStepNumber | null;
 }
+
+export type TargetRepliedEventDataStepNumber = number | TargetRepliedEventDataStepNumberString;
+
+export type TargetRepliedEventDataStepNumberString =
+  | "Infinity"
+  | "-Infinity"
+  | "NaN"
+  | (string & {});
+
+export interface ConnectionRequestSentEvent {
+  id: string;
+  seq: number;
+  type: "connectionRequest.sent";
+  apiVersion: "2";
+  createdAt: string;
+  object: ConnectionRequestSentEventObject;
+  data: unknown;
+}
+
+export interface ConnectionRequestSentEventObject {
+  type: "thread";
+  id: string;
+  /** The object's path under the API; 404 once it's deleted. */
+  url: string;
+}
+
+export interface ConnectionRequestAcceptedEvent {
+  id: string;
+  seq: number;
+  type: "connectionRequest.accepted";
+  apiVersion: "2";
+  createdAt: string;
+  object: ConnectionRequestAcceptedEventObject;
+  data: unknown;
+}
+
+export interface ConnectionRequestAcceptedEventObject {
+  type: "thread";
+  id: string;
+  /** The object's path under the API; 404 once it's deleted. */
+  url: string;
+}
+
+export interface ConnectionRequestWithdrawnEvent {
+  id: string;
+  seq: number;
+  type: "connectionRequest.withdrawn";
+  apiVersion: "2";
+  createdAt: string;
+  object: ConnectionRequestWithdrawnEventObject;
+  data: unknown;
+}
+
+export interface ConnectionRequestWithdrawnEventObject {
+  type: "thread";
+  id: string;
+  /** The object's path under the API; 404 once it's deleted. */
+  url: string;
+}
+
+export interface FollowerCreatedEvent {
+  id: string;
+  seq: number;
+  type: "follower.created";
+  apiVersion: "2";
+  createdAt: string;
+  object: FollowerCreatedEventObject;
+  data: FollowerCreatedEventData;
+}
+
+export interface FollowerCreatedEventObject {
+  type: "thread";
+  id: string;
+  /** The object's path under the API; 404 once it's deleted. */
+  url: string;
+}
+
+export interface FollowerCreatedEventData {
+  accountLinkId: string;
+  profile: FollowerCreatedEventDataProfile;
+}
+
+export interface FollowerCreatedEventDataProfile {
+  id: string;
+  platform: Platform;
+  platformId: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+}
+
+/** The last sequence number read, including events this page leaves out. Null when nothing was read. Pass it as `afterSeq` to continue. */
+export type EventPageLastSeq = number | EventPageLastSeqString;
+
+export type EventPageLastSeqString = "Infinity" | "-Infinity" | "NaN" | (string & {});
 
 export interface MessagesSendResponse {
   message: Message;

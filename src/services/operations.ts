@@ -69,6 +69,7 @@ export const contactsList = {
     platform: { name: "platform", style: "form" },
     platformId: { name: "platformId", style: "form" },
     username: { name: "username", style: "form" },
+    q: { name: "q", style: "form" },
     expand: { name: "expand", style: "form" },
     limit: { name: "limit", style: "form" },
     cursor: { name: "cursor", style: "form" },
@@ -110,6 +111,19 @@ export const contactsRemoveTag = {
   method: "DELETE",
   path: "/contacts/{contactId}/tags/{tagRef}",
   labels: ["contactId", "tagRef"],
+} as const satisfies OperationDescriptor;
+
+export const peopleSearch = {
+  id: "people.search",
+  method: "GET",
+  path: "/people",
+  query: {
+    platform: { name: "platform", style: "form" },
+    accountLinkId: { name: "accountLinkId", style: "form" },
+    q: { name: "q", style: "form" },
+    reach: { name: "reach", style: "form" },
+    enrich: { name: "enrich", style: "form" },
+  },
 } as const satisfies OperationDescriptor;
 
 export const threadsList = {
@@ -252,6 +266,13 @@ export const messagesAttachment = {
   method: "GET",
   path: "/messages/{messageId}/attachments/{index}",
   labels: ["messageId", "index"],
+} as const satisfies OperationDescriptor;
+
+export const relationshipsConnect = {
+  id: "relationships.connect",
+  method: "POST",
+  path: "/connection-requests",
+  hasBody: true,
 } as const satisfies OperationDescriptor;
 
 export const tagsList = {

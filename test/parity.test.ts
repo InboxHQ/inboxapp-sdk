@@ -139,6 +139,6 @@ describe("both clients send the same request", () => {
   }
 
   it("covers every operation of the spec", () => {
-    expect(sdk.operations).toHaveLength(37);
+    expect(sdk.operations).toHaveLength(39);
   });
 });

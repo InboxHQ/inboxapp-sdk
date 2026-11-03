@@ -137,6 +137,33 @@
         "smithy.api#documentation": "The team's record of a person, holding its CRM state: status, tags, notes, valuation and default assignee. A contact groups one or more profiles, a person's accounts on the platforms."
       }
     },
+    "com.inboxapp.api#PeopleService": {
+      "type": "service",
+      "version": "2.0.0",
+      "operations": [
+        {
+          "target": "com.inboxapp.api#PeopleSearch"
+        }
+      ],
+      "errors": [
+        {
+          "target": "com.inboxapp.api#InvalidRequest"
+        },
+        {
+          "target": "com.inboxapp.api#Unauthorized"
+        },
+        {
+          "target": "com.inboxapp.api#RateLimited"
+        },
+        {
+          "target": "com.inboxapp.api#Internal"
+        }
+      ],
+      "traits": {
+        "com.inboxapp.codegen#namespace": "people",
+        "smithy.api#documentation": "People on the platforms, found through the team's account links whether or not Inboxapp knows them yet."
+      }
+    },
     "com.inboxapp.api#ThreadsService": {
       "type": "service",
       "version": "2.0.0",
@@ -225,6 +252,33 @@
       "traits": {
         "com.inboxapp.codegen#namespace": "messages",
         "smithy.api#documentation": "Messages in a thread, and sending, editing, unsending and reacting to them on the platform."
+      }
+    },
+    "com.inboxapp.api#RelationshipsService": {
+      "type": "service",
+      "version": "2.0.0",
+      "operations": [
+        {
+          "target": "com.inboxapp.api#RelationshipsConnect"
+        }
+      ],
+      "errors": [
+        {
+          "target": "com.inboxapp.api#InvalidRequest"
+        },
+        {
+          "target": "com.inboxapp.api#Unauthorized"
+        },
+        {
+          "target": "com.inboxapp.api#RateLimited"
+        },
+        {
+          "target": "com.inboxapp.api#Internal"
+        }
+      ],
+      "traits": {
+        "com.inboxapp.codegen#namespace": "relationships",
+        "smithy.api#documentation": "How an account link stands with a profile on the platform, and requests that change it."
       }
     },
     "com.inboxapp.api#TagsService": {
@@ -396,7 +450,7 @@
           "target": "com.inboxapp.api#PlatformInfoLimits",
           "traits": {
             "smithy.api#required": {},
-            "smithy.api#documentation": "Limits checked before a send reaches the platform."
+            "smithy.api#documentation": "Limits checked before a request reaches the platform."
           }
         },
         "mutationWindows": {
@@ -420,7 +474,7 @@
     "com.inboxapp.api#Platform": {
       "type": "string",
       "traits": {
-        "smithy.api#documentation": "The platform. Every team can use twitter; a team may have others enabled."
+        "smithy.api#documentation": "The platform. Every team can use twitter, linkedin; a team may have others enabled."
       }
     },
     "com.inboxapp.api#PlatformInfoCapabilitiesItem": {
@@ -468,6 +522,12 @@
             "smithy.api#enumValue": "message:forward"
           }
         },
+        "MESSAGE_ANSWER": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message:answer"
+          }
+        },
         "MEDIA_IMAGE": {
           "target": "smithy.api#Unit",
           "traits": {
@@ -508,6 +568,12 @@
           "target": "smithy.api#Unit",
           "traits": {
             "smithy.api#enumValue": "thread:typing:receive"
+          }
+        },
+        "THREAD_SEEN_RECEIVE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread:seen:receive"
           }
         },
         "THREAD_MESSAGE_REQUESTS": {
@@ -563,6 +629,30 @@
           "traits": {
             "smithy.api#enumValue": "profile:unfollow"
           }
+        },
+        "PROFILE_CONNECT": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:connect"
+          }
+        },
+        "PROFILE_CONNECT_NOTE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:connect:note"
+          }
+        },
+        "PROFILE_RESOLVE_ID": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:resolve:id"
+          }
+        },
+        "PROFILE_RESOLVE_USERNAME": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:resolve:username"
+          }
         }
       },
       "traits": {
@@ -609,10 +699,18 @@
             "com.inboxapp.codegen#nullable": {},
             "smithy.api#documentation": "Accepted formats per media kind: MIME types, families such as `image/*`, or extensions such as `.pdf`. A kind without an entry accepts nothing. Null accepts any format."
           }
+        },
+        "connectNoteCharacters": {
+          "target": "smithy.api#Integer",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {},
+            "smithy.api#documentation": "Maximum characters in the note of a connection request. Null when the platform sets none."
+          }
         }
       },
       "traits": {
-        "smithy.api#documentation": "Limits checked before a send reaches the platform."
+        "smithy.api#documentation": "Limits checked before a request reaches the platform."
       }
     },
     "com.inboxapp.api#PlatformInfoLimitsMediaTypes": {
@@ -689,6 +787,9 @@
         "message:forward": {
           "target": "smithy.api#Integer"
         },
+        "message:answer": {
+          "target": "smithy.api#Integer"
+        },
         "media:image": {
           "target": "smithy.api#Integer"
         },
@@ -708,6 +809,9 @@
           "target": "smithy.api#Integer"
         },
         "thread:typing:receive": {
+          "target": "smithy.api#Integer"
+        },
+        "thread:seen:receive": {
           "target": "smithy.api#Integer"
         },
         "thread:message-requests": {
@@ -735,6 +839,18 @@
           "target": "smithy.api#Integer"
         },
         "profile:unfollow": {
+          "target": "smithy.api#Integer"
+        },
+        "profile:connect": {
+          "target": "smithy.api#Integer"
+        },
+        "profile:connect:note": {
+          "target": "smithy.api#Integer"
+        },
+        "profile:resolve:id": {
+          "target": "smithy.api#Integer"
+        },
+        "profile:resolve:username": {
           "target": "smithy.api#Integer"
         }
       },
@@ -890,9 +1006,38 @@
         "string": {
           "target": "smithy.api#String"
         },
-        "variant": {
+        "number": {
           "target": "smithy.api#Double"
+        },
+        "string3": {
+          "target": "com.inboxapp.api#InvalidRequestDetailsIssuesItemPathItemString3"
         }
+      }
+    },
+    "com.inboxapp.api#InvalidRequestDetailsIssuesItemPathItemString3": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
       }
     },
     "com.inboxapp.api#InvalidRequestDetailsIssuesItemPath": {
@@ -1613,7 +1758,7 @@
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {},
-            "smithy.api#documentation": "The platform username without its display prefix. Lookups take this form."
+            "smithy.api#documentation": "The platform username, without a display prefix such as `@`."
           }
         },
         "displayName": {
@@ -1748,6 +1893,12 @@
             "smithy.api#enumValue": "message:forward"
           }
         },
+        "MESSAGE_ANSWER": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message:answer"
+          }
+        },
         "MEDIA_IMAGE": {
           "target": "smithy.api#Unit",
           "traits": {
@@ -1788,6 +1939,12 @@
           "target": "smithy.api#Unit",
           "traits": {
             "smithy.api#enumValue": "thread:typing:receive"
+          }
+        },
+        "THREAD_SEEN_RECEIVE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread:seen:receive"
           }
         },
         "THREAD_MESSAGE_REQUESTS": {
@@ -1842,6 +1999,30 @@
           "target": "smithy.api#Unit",
           "traits": {
             "smithy.api#enumValue": "profile:unfollow"
+          }
+        },
+        "PROFILE_CONNECT": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:connect"
+          }
+        },
+        "PROFILE_CONNECT_NOTE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:connect:note"
+          }
+        },
+        "PROFILE_RESOLVE_ID": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:resolve:id"
+          }
+        },
+        "PROFILE_RESOLVE_USERNAME": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:resolve:username"
           }
         }
       },
@@ -2043,6 +2224,12 @@
         "smithy.api#documentation": "Get account link"
       }
     },
+    "com.inboxapp.api#ContactsListRequestPlatform": {
+      "type": "list",
+      "member": {
+        "target": "com.inboxapp.api#Platform"
+      }
+    },
     "com.inboxapp.api#ContactsListRequestPlatformId": {
       "type": "list",
       "member": {
@@ -2088,24 +2275,31 @@
       "type": "structure",
       "members": {
         "platform": {
-          "target": "com.inboxapp.api#Platform",
+          "target": "com.inboxapp.api#ContactsListRequestPlatform",
           "traits": {
             "smithy.api#httpQuery": "platform",
-            "smithy.api#required": {}
+            "smithy.api#documentation": "Contacts with a profile on these platforms. Defaults to every platform available to the team. `platformId` needs exactly one. Repeat the key to match any of several."
           }
         },
         "platformId": {
           "target": "com.inboxapp.api#ContactsListRequestPlatformId",
           "traits": {
             "smithy.api#httpQuery": "platformId",
-            "smithy.api#documentation": "Contacts with a profile of this platform ID. Give this or the other identity filter, repeating the key for up to 100. No match is an empty page."
+            "smithy.api#documentation": "Contacts with a profile of this platform ID. Give one of `platformId`, `username` or `q`, repeating the key for up to 100. No match is an empty page."
           }
         },
         "username": {
           "target": "com.inboxapp.api#ContactsListRequestUsername",
           "traits": {
             "smithy.api#httpQuery": "username",
-            "smithy.api#documentation": "Contacts with a profile of this username, without its display prefix. One username may match several contacts. Give this or the other identity filter, repeating the key for up to 100. No match is an empty page."
+            "smithy.api#documentation": "Contacts with a profile of this username, without its display prefix. One username may match several contacts. Give one of `platformId`, `username` or `q`, repeating the key for up to 100. No match is an empty page."
+          }
+        },
+        "q": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#httpQuery": "q",
+            "smithy.api#documentation": "Searches contact and profile names, usernames, emails and phone numbers. Not combinable with `platformId` or `username`. Results follow `createdAt`, not relevance, and can trail changes by a few seconds."
           }
         },
         "expand": {
@@ -2191,7 +2385,7 @@
           }
         },
         "valuation": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#ContactValuation",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {},
@@ -2258,7 +2452,7 @@
           "target": "smithy.api#String",
           "traits": {
             "smithy.api#required": {},
-            "smithy.api#documentation": "The platform username without its display prefix. Lookups take this form."
+            "smithy.api#documentation": "The platform username, without a display prefix such as `@`."
           }
         },
         "handle": {
@@ -2331,28 +2525,28 @@
           }
         },
         "followerCount": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#ProfileFollowerCount",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {}
           }
         },
         "followingCount": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#ProfileFollowingCount",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {}
           }
         },
         "postCount": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#ProfilePostCount",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {}
           }
         },
         "engagementCount": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#ProfileEngagementCount",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {},
@@ -2360,7 +2554,7 @@
           }
         },
         "listedCount": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#ProfileListedCount",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {},
@@ -2401,10 +2595,208 @@
           "traits": {
             "smithy.api#required": {}
           }
+        },
+        "relationships": {
+          "target": "com.inboxapp.api#ProfileRelationships",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "One entry per team account link that has interacted with the profile."
+          }
         }
       },
       "traits": {
         "smithy.api#documentation": "One person's account on one platform. Profile data is shared across teams; the team's own data about the person is on their contact."
+      }
+    },
+    "com.inboxapp.api#ProfileFollowerCount": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#ProfileFollowerCountString"
+        }
+      }
+    },
+    "com.inboxapp.api#ProfileFollowerCountString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#ProfileFollowingCount": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#ProfileFollowingCountString"
+        }
+      }
+    },
+    "com.inboxapp.api#ProfileFollowingCountString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#ProfilePostCount": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#ProfilePostCountString"
+        }
+      }
+    },
+    "com.inboxapp.api#ProfilePostCountString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#ProfileEngagementCount": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#ProfileEngagementCountString"
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "On X, how many posts the user has liked."
+      }
+    },
+    "com.inboxapp.api#ProfileEngagementCountString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#ProfileListedCount": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#ProfileListedCountString"
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "On X, how many lists include the profile."
+      }
+    },
+    "com.inboxapp.api#ProfileListedCountString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
       }
     },
     "com.inboxapp.api#ProfileAccountStatus": {
@@ -2439,6 +2831,9 @@
       "members": {
         "twitter": {
           "target": "com.inboxapp.api#ProfilePlatformDataTwitter"
+        },
+        "linkedin": {
+          "target": "com.inboxapp.api#ProfilePlatformDataLinkedin"
         },
         "other": {
           "target": "com.inboxapp.api#ProfilePlatformDataOther"
@@ -2616,6 +3011,285 @@
         "target": "smithy.api#Document"
       }
     },
+    "com.inboxapp.api#ProfilePlatformDataLinkedin": {
+      "type": "structure",
+      "members": {
+        "_tag": {
+          "target": "com.inboxapp.api#ProfilePlatformDataLinkedinTag",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "profileUrn": {
+          "target": "smithy.api#String",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "kind": {
+          "target": "com.inboxapp.api#ProfilePlatformDataLinkedinKind",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "memberBadge": {
+          "target": "com.inboxapp.api#ProfilePlatformDataLinkedinMemberBadge",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "bannerUrl": {
+          "target": "smithy.api#String",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "bannerSize": {
+          "target": "com.inboxapp.api#ProfilePlatformDataLinkedinBannerSize",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "hydratedAt": {
+          "target": "smithy.api#String",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "imageAssetId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "connectionsCount": {
+          "target": "smithy.api#Double",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "currentRole": {
+          "target": "smithy.api#String",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "currentRoleStart": {
+          "target": "com.inboxapp.api#ProfilePlatformDataLinkedinCurrentRoleStart",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "currentCompanyName": {
+          "target": "smithy.api#String",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "currentCompanyUrn": {
+          "target": "smithy.api#String",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "topSchoolName": {
+          "target": "smithy.api#String",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "topSchoolUrn": {
+          "target": "smithy.api#String",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "topSchoolDegree": {
+          "target": "smithy.api#String",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "topSchoolPeriod": {
+          "target": "smithy.api#String",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "employeeCount": {
+          "target": "smithy.api#Double",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "employeeCountRange": {
+          "target": "com.inboxapp.api#ProfilePlatformDataLinkedinEmployeeCountRange",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "industry": {
+          "target": "smithy.api#String",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "pageKind": {
+          "target": "com.inboxapp.api#ProfilePlatformDataLinkedinPageKind",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "companyUrn": {
+          "target": "smithy.api#String",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "currentCompanyLogoUrl": {
+          "target": "smithy.api#String",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "topSchoolLogoUrl": {
+          "target": "smithy.api#String",
+          "traits": {
+            "com.inboxapp.codegen#nullable": {}
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ProfilePlatformDataLinkedinTag": {
+      "type": "enum",
+      "members": {
+        "LINKEDIN": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "linkedin"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ProfilePlatformDataLinkedinKind": {
+      "type": "enum",
+      "members": {
+        "MEMBER": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "member"
+          }
+        },
+        "ORGANIZATION": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "organization"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#ProfilePlatformDataLinkedinMemberBadge": {
+      "type": "enum",
+      "members": {
+        "PREMIUM": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "premium"
+          }
+        },
+        "VERIFIED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "verified"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#ProfilePlatformDataLinkedinBannerSize": {
+      "type": "structure",
+      "members": {
+        "width": {
+          "target": "smithy.api#Double",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "height": {
+          "target": "smithy.api#Double",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ProfilePlatformDataLinkedinCurrentRoleStart": {
+      "type": "structure",
+      "members": {
+        "year": {
+          "target": "smithy.api#Double",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "month": {
+          "target": "smithy.api#Double",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {}
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ProfilePlatformDataLinkedinEmployeeCountRange": {
+      "type": "structure",
+      "members": {
+        "start": {
+          "target": "smithy.api#Double",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "end": {
+          "target": "smithy.api#Double",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {}
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ProfilePlatformDataLinkedinPageKind": {
+      "type": "enum",
+      "members": {
+        "COMPANY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "company"
+          }
+        },
+        "SCHOOL": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "school"
+          }
+        },
+        "SHOWCASE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "showcase"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
     "com.inboxapp.api#ProfilePlatformDataOther": {
       "type": "structure",
       "members": {
@@ -2631,6 +3305,91 @@
         "com.inboxapp.codegen#open": true
       }
     },
+    "com.inboxapp.api#Relationship": {
+      "type": "structure",
+      "members": {
+        "accountLinkId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "degree": {
+          "target": "com.inboxapp.api#RelationshipDegree",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {},
+            "smithy.api#documentation": "How close the profile is to the account link on the platform's network, as last observed. `null` when never observed."
+          }
+        },
+        "connectionRequest": {
+          "target": "com.inboxapp.api#RelationshipConnectionRequest",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {},
+            "smithy.api#documentation": "The account link's pending connection request. `null` once the profile is seen accepting it or the request is withdrawn, or when none was sent."
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "What one of the team's account links knows about a profile."
+      }
+    },
+    "com.inboxapp.api#RelationshipDegree": {
+      "type": "enum",
+      "members": {
+        "SELF": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "self"
+          }
+        },
+        "FIRST": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "first"
+          }
+        },
+        "SECOND": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "second"
+          }
+        },
+        "THIRD": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "third"
+          }
+        },
+        "OUT_OF_NETWORK": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "outOfNetwork"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#RelationshipConnectionRequest": {
+      "type": "structure",
+      "members": {
+        "sentAt": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ProfileRelationships": {
+      "type": "list",
+      "member": {
+        "target": "com.inboxapp.api#Relationship"
+      }
+    },
     "com.inboxapp.api#ContactProfiles": {
       "type": "list",
       "member": {
@@ -2641,6 +3400,46 @@
       "type": "list",
       "member": {
         "target": "smithy.api#String"
+      }
+    },
+    "com.inboxapp.api#ContactValuation": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#ContactValuationString"
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "What the person is worth to the team, in the team's `currency`."
+      }
+    },
+    "com.inboxapp.api#ContactValuationString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
       }
     },
     "com.inboxapp.api#Status": {
@@ -3148,6 +3947,1308 @@
         "smithy.api#documentation": "Remove tag from contact\n\nRemoving a tag the contact doesn't have succeeds."
       }
     },
+    "com.inboxapp.api#PeopleSearchRequestPlatform": {
+      "type": "list",
+      "member": {
+        "target": "com.inboxapp.api#Platform"
+      }
+    },
+    "com.inboxapp.api#PeopleSearchRequestAccountLinkId": {
+      "type": "list",
+      "member": {
+        "target": "com.inboxapp.api#Cuid2"
+      }
+    },
+    "com.inboxapp.api#PeopleSearchRequestReach": {
+      "type": "enum",
+      "members": {
+        "CONTACTS": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "contacts"
+          }
+        },
+        "NETWORK": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "network"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "`contacts`, the default, searches people each account already messages. `network` also searches beyond them, where the platform separates the two."
+      }
+    },
+    "com.inboxapp.api#PeopleSearchRequest": {
+      "type": "structure",
+      "members": {
+        "platform": {
+          "target": "com.inboxapp.api#PeopleSearchRequestPlatform",
+          "traits": {
+            "smithy.api#httpQuery": "platform",
+            "smithy.api#documentation": "Searches these platforms. Defaults to every available platform. With `accountLinkId`, keeps only the account links on these platforms. Repeat the key to match any of several."
+          }
+        },
+        "accountLinkId": {
+          "target": "com.inboxapp.api#PeopleSearchRequestAccountLinkId",
+          "traits": {
+            "smithy.api#httpQuery": "accountLinkId",
+            "smithy.api#documentation": "Searches from these account links. Each platform is searched once, from the oldest account link given on it; IDs that match no account link are ignored. Without it, each platform is searched from its oldest active account link that can search. Repeat the key to match any of several."
+          }
+        },
+        "q": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#httpQuery": "q",
+            "smithy.api#required": {},
+            "smithy.api#documentation": "A name or username, as typed into the platform's own people search."
+          }
+        },
+        "reach": {
+          "target": "com.inboxapp.api#PeopleSearchRequestReach",
+          "traits": {
+            "smithy.api#httpQuery": "reach",
+            "smithy.api#documentation": "`contacts`, the default, searches people each account already messages. `network` also searches beyond them, where the platform separates the two."
+          }
+        },
+        "enrich": {
+          "target": "smithy.api#Boolean",
+          "traits": {
+            "smithy.api#httpQuery": "enrich",
+            "smithy.api#documentation": "`true` fetches and stores every result Inboxapp hasn't stored yet, so each comes back as a full profile. A result that can't be fetched or stored is left out. Slower. Defaults to `false`."
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#PersonList": {
+      "type": "structure",
+      "members": {
+        "data": {
+          "target": "com.inboxapp.api#PersonListData",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "failures": {
+          "target": "com.inboxapp.api#PersonListFailures",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The searched account links that returned nothing. When every one fails, the request fails with the first one's error instead."
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "Every searched account link's results in one list: closest name or username match first, then people the account already talks to or is connected with, then verified, then each platform's own order. Not paginated."
+      }
+    },
+    "com.inboxapp.api#Person": {
+      "type": "structure",
+      "members": {
+        "accountLinkId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The account link that found this person. `threadId`, `canMessage`, `degree`, `closeness` and `target` are its view."
+          }
+        },
+        "profile": {
+          "target": "com.inboxapp.api#PersonProfile",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "contactId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {},
+            "smithy.api#documentation": "The team's contact holding this profile, if any."
+          }
+        },
+        "threadId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {},
+            "smithy.api#documentation": "The account link's latest thread with this profile, if any."
+          }
+        },
+        "canMessage": {
+          "target": "smithy.api#Boolean",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {},
+            "smithy.api#documentation": "The platform's hint that the account link can message this person, `null` when the platform doesn't say. A send can still fail with `recipientUnavailable`."
+          }
+        },
+        "degree": {
+          "target": "com.inboxapp.api#PersonDegree",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {},
+            "smithy.api#documentation": "How close the person is to the account link on the platform's network, as the search states it. `null` when it states none."
+          }
+        },
+        "closeness": {
+          "target": "com.inboxapp.api#PersonCloseness",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "`connected` for a direct tie such as a follow or 1st-degree connection, `near` for a shared one such as mutuals or 2nd degree."
+          }
+        },
+        "target": {
+          "target": "com.inboxapp.api#PersonTarget",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "Pass as is as the `target` of Send message or Send connection request to reach this person from the account link."
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "A person one of the searched account links found."
+      }
+    },
+    "com.inboxapp.api#PersonProfile": {
+      "type": "union",
+      "members": {
+        "profile": {
+          "target": "com.inboxapp.api#Profile"
+        },
+        "profileHit": {
+          "target": "com.inboxapp.api#ProfileHit"
+        }
+      }
+    },
+    "com.inboxapp.api#ProfileHit": {
+      "type": "structure",
+      "members": {
+        "id": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "Inboxapp hasn't stored this profile. Search with `enrich=true` to get only stored profiles."
+          }
+        },
+        "platform": {
+          "target": "com.inboxapp.api#Platform",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "platformId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The ID the platform gives this object. Only meaningful next to its `platform`."
+          }
+        },
+        "username": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {},
+            "smithy.api#documentation": "The platform username, without a display prefix such as `@`."
+          }
+        },
+        "handle": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The username as the platform displays it. Show this, and look up by `username`."
+          }
+        },
+        "displayName": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "avatarUrl": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "verified": {
+          "target": "smithy.api#Boolean",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The platform vouches for the account, such as with an X badge. Platform-specific badges are in `platformData`."
+          }
+        },
+        "isOrganization": {
+          "target": "smithy.api#Boolean",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "A company or page rather than a person."
+          }
+        },
+        "profileUrl": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "platformData": {
+          "target": "com.inboxapp.api#ProfilePlatformData",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "A profile the platform's search returned that Inboxapp hasn't stored, with only what identifies it."
+      }
+    },
+    "com.inboxapp.api#PersonDegree": {
+      "type": "enum",
+      "members": {
+        "SELF": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "self"
+          }
+        },
+        "FIRST": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "first"
+          }
+        },
+        "SECOND": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "second"
+          }
+        },
+        "THIRD": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "third"
+          }
+        },
+        "OUT_OF_NETWORK": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "outOfNetwork"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#PersonCloseness": {
+      "type": "enum",
+      "members": {
+        "CONNECTED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "connected"
+          }
+        },
+        "NEAR": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "near"
+          }
+        },
+        "NONE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "none"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "`connected` for a direct tie such as a follow or 1st-degree connection, `near` for a shared one such as mutuals or 2nd degree.",
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#PersonTarget": {
+      "type": "union",
+      "members": {
+        "profileByPlatformID": {
+          "target": "com.inboxapp.api#PersonTargetProfileByPlatformID"
+        },
+        "profileByUsername": {
+          "target": "com.inboxapp.api#PersonTargetProfileByUsername"
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "Pass as is as the `target` of Send message or Send connection request to reach this person from the account link."
+      }
+    },
+    "com.inboxapp.api#PersonTargetProfileByPlatformID": {
+      "type": "structure",
+      "members": {
+        "type": {
+          "target": "com.inboxapp.api#PersonTargetProfileByPlatformIDType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "accountLinkId": {
+          "target": "com.inboxapp.api#Cuid2",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "platform": {
+          "target": "com.inboxapp.api#Platform",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "platformId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The person's ID on the platform. Reaching someone Inboxapp hasn't stored needs the account link's `profile:resolve:id`."
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#PersonTargetProfileByPlatformIDType": {
+      "type": "enum",
+      "members": {
+        "PROFILE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#PersonTargetProfileByUsername": {
+      "type": "structure",
+      "members": {
+        "type": {
+          "target": "com.inboxapp.api#PersonTargetProfileByUsernameType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "accountLinkId": {
+          "target": "com.inboxapp.api#Cuid2",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "platform": {
+          "target": "com.inboxapp.api#Platform",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "username": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The person's username on the platform, without a display prefix such as `@`. On LinkedIn, what follows `/in/` in their profile URL: the vanity name or the `ACoA…` profile ID. Reaching someone Inboxapp hasn't stored needs the account link's `profile:resolve:username`."
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#PersonTargetProfileByUsernameType": {
+      "type": "enum",
+      "members": {
+        "PROFILE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#PersonListData": {
+      "type": "list",
+      "member": {
+        "target": "com.inboxapp.api#Person"
+      }
+    },
+    "com.inboxapp.api#PeopleSearchFailure": {
+      "type": "structure",
+      "members": {
+        "accountLinkId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "code": {
+          "target": "com.inboxapp.api#PeopleSearchFailureCode",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The error code searching from this account link alone returns."
+          }
+        },
+        "message": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "An account link whose search failed, so `data` has nothing from it."
+      }
+    },
+    "com.inboxapp.api#PeopleSearchFailureCode": {
+      "type": "enum",
+      "members": {
+        "ACCOUNT_LINK_NOT_FOUND": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "accountLinkNotFound"
+          }
+        },
+        "ACCOUNT_LINK_DISCONNECTED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "accountLinkDisconnected"
+          }
+        },
+        "INTEGRATION_SETUP_REQUIRED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "integrationSetupRequired"
+          }
+        },
+        "CAPABILITY_NOT_SUPPORTED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "capabilityNotSupported"
+          }
+        },
+        "PLATFORM_RATE_LIMITED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "platformRateLimited"
+          }
+        },
+        "PEOPLE_SEARCH_RATE_LIMITED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "peopleSearchRateLimited"
+          }
+        },
+        "PLATFORM_ERROR": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "platformError"
+          }
+        },
+        "PLATFORM_UNAVAILABLE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "platformUnavailable"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "The error code searching from this account link alone returns.",
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#PersonListFailures": {
+      "type": "list",
+      "member": {
+        "target": "com.inboxapp.api#PeopleSearchFailure"
+      }
+    },
+    "com.inboxapp.api#PlanRequired": {
+      "type": "structure",
+      "members": {
+        "code": {
+          "target": "com.inboxapp.api#PlanRequiredCode",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "message": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "details": {
+          "target": "com.inboxapp.api#PlanRequiredDetails",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "requestId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#errorMatchers": [
+          {
+            "code": "planRequired"
+          }
+        ],
+        "smithy.api#error": "client",
+        "smithy.api#httpError": 403
+      }
+    },
+    "com.inboxapp.api#PlanRequiredCode": {
+      "type": "enum",
+      "members": {
+        "PLAN_REQUIRED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "planRequired"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#PlanRequiredDetails": {
+      "type": "structure",
+      "members": {
+        "feature": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#AccountLinkDisconnected": {
+      "type": "structure",
+      "members": {
+        "code": {
+          "target": "com.inboxapp.api#AccountLinkDisconnectedCode",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "message": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "details": {
+          "target": "com.inboxapp.api#AccountLinkDisconnectedDetails",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "requestId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#errorMatchers": [
+          {
+            "code": "accountLinkDisconnected"
+          }
+        ],
+        "smithy.api#error": "client",
+        "smithy.api#httpError": 409
+      }
+    },
+    "com.inboxapp.api#AccountLinkDisconnectedCode": {
+      "type": "enum",
+      "members": {
+        "ACCOUNT_LINK_DISCONNECTED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "accountLinkDisconnected"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#AccountLinkDisconnectedDetails": {
+      "type": "structure",
+      "members": {
+        "accountLinkId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "status": {
+          "target": "com.inboxapp.api#AccountLinkDisconnectedDetailsStatus",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "`active` sends and syncs. `paused` is stopped for the reasons in `pauseReasons`, and resumes once none remain. `offline` lost its connection to the platform and must be reconnected in Inboxapp."
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#AccountLinkDisconnectedDetailsStatus": {
+      "type": "enum",
+      "members": {
+        "ACTIVE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "active"
+          }
+        },
+        "OFFLINE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "offline"
+          }
+        },
+        "PAUSED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "paused"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "`active` sends and syncs. `paused` is stopped for the reasons in `pauseReasons`, and resumes once none remain. `offline` lost its connection to the platform and must be reconnected in Inboxapp.",
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#IntegrationSetupRequired": {
+      "type": "structure",
+      "members": {
+        "code": {
+          "target": "com.inboxapp.api#IntegrationSetupRequiredCode",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "message": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "details": {
+          "target": "com.inboxapp.api#IntegrationSetupRequiredDetails",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "requestId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#errorMatchers": [
+          {
+            "code": "integrationSetupRequired"
+          }
+        ],
+        "smithy.api#error": "client",
+        "smithy.api#httpError": 409
+      }
+    },
+    "com.inboxapp.api#IntegrationSetupRequiredCode": {
+      "type": "enum",
+      "members": {
+        "INTEGRATION_SETUP_REQUIRED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "integrationSetupRequired"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#IntegrationSetupRequiredDetails": {
+      "type": "structure",
+      "members": {
+        "accountLinkId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#CapabilityNotSupported": {
+      "type": "structure",
+      "members": {
+        "code": {
+          "target": "com.inboxapp.api#CapabilityNotSupportedCode",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "message": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "details": {
+          "target": "com.inboxapp.api#CapabilityNotSupportedDetails",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "requestId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#errorMatchers": [
+          {
+            "code": "capabilityNotSupported"
+          }
+        ],
+        "smithy.api#error": "client",
+        "smithy.api#httpError": 422
+      }
+    },
+    "com.inboxapp.api#CapabilityNotSupportedCode": {
+      "type": "enum",
+      "members": {
+        "CAPABILITY_NOT_SUPPORTED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "capabilityNotSupported"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#CapabilityNotSupportedDetails": {
+      "type": "structure",
+      "members": {
+        "capability": {
+          "target": "com.inboxapp.api#CapabilityNotSupportedDetailsCapability",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#CapabilityNotSupportedDetailsCapability": {
+      "type": "enum",
+      "members": {
+        "MESSAGE_SEND": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message:send"
+          }
+        },
+        "MESSAGE_EDIT": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message:edit"
+          }
+        },
+        "MESSAGE_DELETE_SELF": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message:delete:self"
+          }
+        },
+        "MESSAGE_UNSEND": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message:unsend"
+          }
+        },
+        "MESSAGE_REACT": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message:react"
+          }
+        },
+        "MESSAGE_REPLY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message:reply"
+          }
+        },
+        "MESSAGE_FORWARD": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message:forward"
+          }
+        },
+        "MESSAGE_ANSWER": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message:answer"
+          }
+        },
+        "MEDIA_IMAGE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "media:image"
+          }
+        },
+        "MEDIA_VIDEO": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "media:video"
+          }
+        },
+        "MEDIA_GIF": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "media:gif"
+          }
+        },
+        "MEDIA_FILE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "media:file"
+          }
+        },
+        "MEDIA_AUDIO": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "media:audio"
+          }
+        },
+        "THREAD_TYPING_SEND": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread:typing:send"
+          }
+        },
+        "THREAD_TYPING_RECEIVE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread:typing:receive"
+          }
+        },
+        "THREAD_SEEN_RECEIVE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread:seen:receive"
+          }
+        },
+        "THREAD_MESSAGE_REQUESTS": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread:message-requests"
+          }
+        },
+        "THREAD_DELETE_REMOTE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread:delete:remote"
+          }
+        },
+        "DIRECTORY_TYPEAHEAD": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "directory:typeahead"
+          }
+        },
+        "THREAD_ARCHIVE_OBSERVE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread:archive:observe"
+          }
+        },
+        "THREAD_ARCHIVE_MUTATE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread:archive:mutate"
+          }
+        },
+        "THREAD_READ_OBSERVE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread:read:observe"
+          }
+        },
+        "THREAD_READ_MUTATE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread:read:mutate"
+          }
+        },
+        "PROFILE_FOLLOW": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:follow"
+          }
+        },
+        "PROFILE_UNFOLLOW": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:unfollow"
+          }
+        },
+        "PROFILE_CONNECT": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:connect"
+          }
+        },
+        "PROFILE_CONNECT_NOTE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:connect:note"
+          }
+        },
+        "PROFILE_RESOLVE_ID": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:resolve:id"
+          }
+        },
+        "PROFILE_RESOLVE_USERNAME": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:resolve:username"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#PeopleSearchRateLimited": {
+      "type": "structure",
+      "members": {
+        "code": {
+          "target": "com.inboxapp.api#PeopleSearchRateLimitedCode",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "message": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "details": {
+          "target": "com.inboxapp.api#PeopleSearchRateLimitedDetails",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "requestId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#errorMatchers": [
+          {
+            "code": "peopleSearchRateLimited"
+          }
+        ],
+        "smithy.api#error": "client",
+        "smithy.api#httpError": 429,
+        "smithy.api#retryable": {
+          "throttling": true
+        }
+      }
+    },
+    "com.inboxapp.api#PeopleSearchRateLimitedCode": {
+      "type": "enum",
+      "members": {
+        "PEOPLE_SEARCH_RATE_LIMITED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "peopleSearchRateLimited"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#PeopleSearchRateLimitedDetails": {
+      "type": "structure",
+      "members": {
+        "accountLinkId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "window": {
+          "target": "com.inboxapp.api#PeopleSearchRateLimitedDetailsWindow",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "limit": {
+          "target": "smithy.api#Integer",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "resetAt": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#PeopleSearchRateLimitedDetailsWindow": {
+      "type": "enum",
+      "members": {
+        "MINUTE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "minute"
+          }
+        },
+        "HOUR": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "hour"
+          }
+        },
+        "DAY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "day"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#PlatformRateLimited": {
+      "type": "structure",
+      "members": {
+        "code": {
+          "target": "com.inboxapp.api#PlatformRateLimitedCode",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "message": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "details": {
+          "target": "com.inboxapp.api#PlatformRateLimitedDetails",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "requestId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#errorMatchers": [
+          {
+            "code": "platformRateLimited"
+          }
+        ],
+        "smithy.api#error": "client",
+        "smithy.api#httpError": 429,
+        "smithy.api#retryable": {
+          "throttling": true
+        }
+      }
+    },
+    "com.inboxapp.api#PlatformRateLimitedCode": {
+      "type": "enum",
+      "members": {
+        "PLATFORM_RATE_LIMITED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "platformRateLimited"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#PlatformRateLimitedDetails": {
+      "type": "structure",
+      "members": {
+        "retryAfterSeconds": {
+          "target": "smithy.api#Integer",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {}
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#PlatformError": {
+      "type": "structure",
+      "members": {
+        "code": {
+          "target": "com.inboxapp.api#PlatformErrorCode",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "message": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "details": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "requestId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#errorMatchers": [
+          {
+            "code": "platformError"
+          }
+        ],
+        "smithy.api#error": "server",
+        "smithy.api#httpError": 502,
+        "smithy.api#retryable": {}
+      }
+    },
+    "com.inboxapp.api#PlatformErrorCode": {
+      "type": "enum",
+      "members": {
+        "PLATFORM_ERROR": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "platformError"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#PlatformUnavailable": {
+      "type": "structure",
+      "members": {
+        "code": {
+          "target": "com.inboxapp.api#PlatformUnavailableCode",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "message": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "details": {
+          "target": "com.inboxapp.api#PlatformUnavailableDetails",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "requestId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#errorMatchers": [
+          {
+            "code": "platformUnavailable"
+          }
+        ],
+        "smithy.api#error": "server",
+        "smithy.api#httpError": 503,
+        "smithy.api#retryable": {}
+      }
+    },
+    "com.inboxapp.api#PlatformUnavailableCode": {
+      "type": "enum",
+      "members": {
+        "PLATFORM_UNAVAILABLE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "platformUnavailable"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#PlatformUnavailableDetails": {
+      "type": "structure",
+      "members": {
+        "retryAfterSeconds": {
+          "target": "smithy.api#Integer",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {}
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#PeopleSearch": {
+      "type": "operation",
+      "input": {
+        "target": "com.inboxapp.api#PeopleSearchRequest"
+      },
+      "output": {
+        "target": "com.inboxapp.api#PersonList"
+      },
+      "errors": [
+        {
+          "target": "com.inboxapp.api#PlatformNotAvailable"
+        },
+        {
+          "target": "com.inboxapp.api#PlanRequired"
+        },
+        {
+          "target": "com.inboxapp.api#AccountLinkNotFound"
+        },
+        {
+          "target": "com.inboxapp.api#AccountLinkDisconnected"
+        },
+        {
+          "target": "com.inboxapp.api#IntegrationSetupRequired"
+        },
+        {
+          "target": "com.inboxapp.api#CapabilityNotSupported"
+        },
+        {
+          "target": "com.inboxapp.api#PeopleSearchRateLimited"
+        },
+        {
+          "target": "com.inboxapp.api#PlatformRateLimited"
+        },
+        {
+          "target": "com.inboxapp.api#PlatformError"
+        },
+        {
+          "target": "com.inboxapp.api#PlatformUnavailable"
+        }
+      ],
+      "traits": {
+        "smithy.api#http": {
+          "method": "GET",
+          "uri": "/people",
+          "code": 200
+        },
+        "com.inboxapp.codegen#operationId": "people.search",
+        "com.inboxapp.codegen#operationName": "search",
+        "smithy.api#documentation": "Search people\n\nSearches people on each platform as one of the team's account links, like the platform's own search box.\n\nNeeds the Advanced API add-on, and `directory:typeahead` on each account link. Each account link can search 20 times per minute, 300 per hour and 1500 per day, so the platform doesn't flag its session; past a limit, it is listed in `failures` with `peopleSearchRateLimited`.\n\nUse the result's `target` to reach that person on endpoints like `Send message` or `Send connection request`."
+      }
+    },
     "com.inboxapp.api#ThreadsListRequestAccountLinkId": {
       "type": "list",
       "member": {
@@ -3485,7 +5586,7 @@
           "target": "smithy.api#Boolean",
           "traits": {
             "smithy.api#required": {},
-            "smithy.api#documentation": "Marked unread in Inboxapp. A thread no one has opened yet is not unread."
+            "smithy.api#documentation": "Marked unread in Inboxapp for the team owner, whose view the API takes. A thread no one has opened yet is not unread."
           }
         },
         "restrictions": {
@@ -3518,6 +5619,20 @@
         },
         "activity": {
           "target": "com.inboxapp.api#ThreadActivity",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "seen": {
+          "target": "com.inboxapp.api#ThreadSeen",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {}
+          }
+        },
+        "delivered": {
+          "target": "com.inboxapp.api#ThreadDelivered",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {}
@@ -3618,6 +5733,12 @@
             "smithy.api#enumValue": "message:forward"
           }
         },
+        "MESSAGE_ANSWER": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message:answer"
+          }
+        },
         "MEDIA_IMAGE": {
           "target": "smithy.api#Unit",
           "traits": {
@@ -3658,6 +5779,12 @@
           "target": "smithy.api#Unit",
           "traits": {
             "smithy.api#enumValue": "thread:typing:receive"
+          }
+        },
+        "THREAD_SEEN_RECEIVE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread:seen:receive"
           }
         },
         "THREAD_MESSAGE_REQUESTS": {
@@ -3712,6 +5839,30 @@
           "target": "smithy.api#Unit",
           "traits": {
             "smithy.api#enumValue": "profile:unfollow"
+          }
+        },
+        "PROFILE_CONNECT": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:connect"
+          }
+        },
+        "PROFILE_CONNECT_NOTE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:connect:note"
+          }
+        },
+        "PROFILE_RESOLVE_ID": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:resolve:id"
+          }
+        },
+        "PROFILE_RESOLVE_USERNAME": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:resolve:username"
           }
         }
       },
@@ -3811,6 +5962,14 @@
             "smithy.api#documentation": "One line as the inbox shows it, such as the message text or `You reacted with 👍`. Null when there is nothing to show."
           }
         },
+        "previewKind": {
+          "target": "com.inboxapp.api#ThreadActivityPreviewKind",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {},
+            "smithy.api#documentation": "What `preview` describes when the latest message is rich content, which the inbox shows as an icon beside it. Null for anything else, such as plain text or a reaction."
+          }
+        },
         "direction": {
           "target": "com.inboxapp.api#ThreadActivityDirection",
           "traits": {
@@ -3827,6 +5986,56 @@
       },
       "traits": {
         "smithy.api#documentation": "The thread's latest activity: a message, or a reaction since. `at` is when it happened, which is not always the thread's position in a list: see `order`."
+      }
+    },
+    "com.inboxapp.api#ThreadActivityPreviewKind": {
+      "type": "enum",
+      "members": {
+        "CONTACT": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "contact"
+          }
+        },
+        "LOCATION": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "location"
+          }
+        },
+        "POLL": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "poll"
+          }
+        },
+        "EVENT": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "event"
+          }
+        },
+        "VIDEO_CALL": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "videoCall"
+          }
+        },
+        "VOICE_CALL": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "voiceCall"
+          }
+        },
+        "DISAPPEARING_TIMER": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "disappearingTimer"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
       }
     },
     "com.inboxapp.api#ThreadActivityDirection": {
@@ -3848,6 +6057,48 @@
       "traits": {
         "smithy.api#documentation": "`outbound` when the account link acted.",
         "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#ThreadSeen": {
+      "type": "structure",
+      "members": {
+        "messageId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The latest of the account link's messages the profile has seen. Every earlier message counts as seen too."
+          }
+        },
+        "at": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "When the profile last read the account link's messages, on platforms with `thread:seen:receive`. Null until they have."
+      }
+    },
+    "com.inboxapp.api#ThreadDelivered": {
+      "type": "structure",
+      "members": {
+        "messageId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The latest of the account link's messages known to have reached the profile's device. Every earlier message counts as delivered too, as does any message `seen` covers, even when this names an earlier one."
+          }
+        },
+        "at": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "When the account link's messages last reached the profile's device, on platforms that report delivery. Null until they have, or when the platform doesn't report it."
       }
     },
     "com.inboxapp.api#ThreadPageData": {
@@ -4065,7 +6316,7 @@
         "unread": {
           "target": "smithy.api#Boolean",
           "traits": {
-            "smithy.api#documentation": "Also applied on the platform when the account link has `thread:read:mutate`."
+            "smithy.api#documentation": "Marks the thread read or unread for the team owner. Also applied on the platform when the account link has `thread:read:mutate`."
           }
         },
         "assigneeId": {
@@ -4156,542 +6407,6 @@
       "traits": {
         "smithy.api#documentation": "`remoteAndLocal` when the conversation was also deleted on the platform. `local` when only Inboxapp's copy was, because the platform can't delete it or it never existed there.",
         "com.inboxapp.codegen#open": true
-      }
-    },
-    "com.inboxapp.api#AccountLinkDisconnected": {
-      "type": "structure",
-      "members": {
-        "code": {
-          "target": "com.inboxapp.api#AccountLinkDisconnectedCode",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "message": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "details": {
-          "target": "com.inboxapp.api#AccountLinkDisconnectedDetails",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "requestId": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        }
-      },
-      "traits": {
-        "com.inboxapp.codegen#errorMatchers": [
-          {
-            "code": "accountLinkDisconnected"
-          }
-        ],
-        "smithy.api#error": "client",
-        "smithy.api#httpError": 409
-      }
-    },
-    "com.inboxapp.api#AccountLinkDisconnectedCode": {
-      "type": "enum",
-      "members": {
-        "ACCOUNT_LINK_DISCONNECTED": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "accountLinkDisconnected"
-          }
-        }
-      }
-    },
-    "com.inboxapp.api#AccountLinkDisconnectedDetails": {
-      "type": "structure",
-      "members": {
-        "accountLinkId": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "status": {
-          "target": "com.inboxapp.api#AccountLinkDisconnectedDetailsStatus",
-          "traits": {
-            "smithy.api#required": {},
-            "smithy.api#documentation": "`active` sends and syncs. `paused` is stopped for the reasons in `pauseReasons`, and resumes once none remain. `offline` lost its connection to the platform and must be reconnected in Inboxapp."
-          }
-        }
-      }
-    },
-    "com.inboxapp.api#AccountLinkDisconnectedDetailsStatus": {
-      "type": "enum",
-      "members": {
-        "ACTIVE": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "active"
-          }
-        },
-        "OFFLINE": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "offline"
-          }
-        },
-        "PAUSED": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "paused"
-          }
-        }
-      },
-      "traits": {
-        "smithy.api#documentation": "`active` sends and syncs. `paused` is stopped for the reasons in `pauseReasons`, and resumes once none remain. `offline` lost its connection to the platform and must be reconnected in Inboxapp.",
-        "com.inboxapp.codegen#open": true
-      }
-    },
-    "com.inboxapp.api#IntegrationSetupRequired": {
-      "type": "structure",
-      "members": {
-        "code": {
-          "target": "com.inboxapp.api#IntegrationSetupRequiredCode",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "message": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "details": {
-          "target": "com.inboxapp.api#IntegrationSetupRequiredDetails",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "requestId": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        }
-      },
-      "traits": {
-        "com.inboxapp.codegen#errorMatchers": [
-          {
-            "code": "integrationSetupRequired"
-          }
-        ],
-        "smithy.api#error": "client",
-        "smithy.api#httpError": 409
-      }
-    },
-    "com.inboxapp.api#IntegrationSetupRequiredCode": {
-      "type": "enum",
-      "members": {
-        "INTEGRATION_SETUP_REQUIRED": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "integrationSetupRequired"
-          }
-        }
-      }
-    },
-    "com.inboxapp.api#IntegrationSetupRequiredDetails": {
-      "type": "structure",
-      "members": {
-        "accountLinkId": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        }
-      }
-    },
-    "com.inboxapp.api#CapabilityNotSupported": {
-      "type": "structure",
-      "members": {
-        "code": {
-          "target": "com.inboxapp.api#CapabilityNotSupportedCode",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "message": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "details": {
-          "target": "com.inboxapp.api#CapabilityNotSupportedDetails",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "requestId": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        }
-      },
-      "traits": {
-        "com.inboxapp.codegen#errorMatchers": [
-          {
-            "code": "capabilityNotSupported"
-          }
-        ],
-        "smithy.api#error": "client",
-        "smithy.api#httpError": 422
-      }
-    },
-    "com.inboxapp.api#CapabilityNotSupportedCode": {
-      "type": "enum",
-      "members": {
-        "CAPABILITY_NOT_SUPPORTED": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "capabilityNotSupported"
-          }
-        }
-      }
-    },
-    "com.inboxapp.api#CapabilityNotSupportedDetails": {
-      "type": "structure",
-      "members": {
-        "capability": {
-          "target": "com.inboxapp.api#CapabilityNotSupportedDetailsCapability",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        }
-      }
-    },
-    "com.inboxapp.api#CapabilityNotSupportedDetailsCapability": {
-      "type": "enum",
-      "members": {
-        "MESSAGE_SEND": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "message:send"
-          }
-        },
-        "MESSAGE_EDIT": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "message:edit"
-          }
-        },
-        "MESSAGE_DELETE_SELF": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "message:delete:self"
-          }
-        },
-        "MESSAGE_UNSEND": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "message:unsend"
-          }
-        },
-        "MESSAGE_REACT": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "message:react"
-          }
-        },
-        "MESSAGE_REPLY": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "message:reply"
-          }
-        },
-        "MESSAGE_FORWARD": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "message:forward"
-          }
-        },
-        "MEDIA_IMAGE": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "media:image"
-          }
-        },
-        "MEDIA_VIDEO": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "media:video"
-          }
-        },
-        "MEDIA_GIF": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "media:gif"
-          }
-        },
-        "MEDIA_FILE": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "media:file"
-          }
-        },
-        "MEDIA_AUDIO": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "media:audio"
-          }
-        },
-        "THREAD_TYPING_SEND": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "thread:typing:send"
-          }
-        },
-        "THREAD_TYPING_RECEIVE": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "thread:typing:receive"
-          }
-        },
-        "THREAD_MESSAGE_REQUESTS": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "thread:message-requests"
-          }
-        },
-        "THREAD_DELETE_REMOTE": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "thread:delete:remote"
-          }
-        },
-        "DIRECTORY_TYPEAHEAD": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "directory:typeahead"
-          }
-        },
-        "THREAD_ARCHIVE_OBSERVE": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "thread:archive:observe"
-          }
-        },
-        "THREAD_ARCHIVE_MUTATE": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "thread:archive:mutate"
-          }
-        },
-        "THREAD_READ_OBSERVE": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "thread:read:observe"
-          }
-        },
-        "THREAD_READ_MUTATE": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "thread:read:mutate"
-          }
-        },
-        "PROFILE_FOLLOW": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "profile:follow"
-          }
-        },
-        "PROFILE_UNFOLLOW": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "profile:unfollow"
-          }
-        }
-      },
-      "traits": {
-        "com.inboxapp.codegen#open": true
-      }
-    },
-    "com.inboxapp.api#PlatformRateLimited": {
-      "type": "structure",
-      "members": {
-        "code": {
-          "target": "com.inboxapp.api#PlatformRateLimitedCode",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "message": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "details": {
-          "target": "com.inboxapp.api#PlatformRateLimitedDetails",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "requestId": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        }
-      },
-      "traits": {
-        "com.inboxapp.codegen#errorMatchers": [
-          {
-            "code": "platformRateLimited"
-          }
-        ],
-        "smithy.api#error": "client",
-        "smithy.api#httpError": 429,
-        "smithy.api#retryable": {
-          "throttling": true
-        }
-      }
-    },
-    "com.inboxapp.api#PlatformRateLimitedCode": {
-      "type": "enum",
-      "members": {
-        "PLATFORM_RATE_LIMITED": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "platformRateLimited"
-          }
-        }
-      }
-    },
-    "com.inboxapp.api#PlatformRateLimitedDetails": {
-      "type": "structure",
-      "members": {
-        "retryAfterSeconds": {
-          "target": "smithy.api#Integer",
-          "traits": {
-            "smithy.api#required": {},
-            "com.inboxapp.codegen#nullable": {}
-          }
-        }
-      }
-    },
-    "com.inboxapp.api#PlatformError": {
-      "type": "structure",
-      "members": {
-        "code": {
-          "target": "com.inboxapp.api#PlatformErrorCode",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "message": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "details": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "requestId": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        }
-      },
-      "traits": {
-        "com.inboxapp.codegen#errorMatchers": [
-          {
-            "code": "platformError"
-          }
-        ],
-        "smithy.api#error": "server",
-        "smithy.api#httpError": 502,
-        "smithy.api#retryable": {}
-      }
-    },
-    "com.inboxapp.api#PlatformErrorCode": {
-      "type": "enum",
-      "members": {
-        "PLATFORM_ERROR": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "platformError"
-          }
-        }
-      }
-    },
-    "com.inboxapp.api#PlatformUnavailable": {
-      "type": "structure",
-      "members": {
-        "code": {
-          "target": "com.inboxapp.api#PlatformUnavailableCode",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "message": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "details": {
-          "target": "com.inboxapp.api#PlatformUnavailableDetails",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "requestId": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        }
-      },
-      "traits": {
-        "com.inboxapp.codegen#errorMatchers": [
-          {
-            "code": "platformUnavailable"
-          }
-        ],
-        "smithy.api#error": "server",
-        "smithy.api#httpError": 503,
-        "smithy.api#retryable": {}
-      }
-    },
-    "com.inboxapp.api#PlatformUnavailableCode": {
-      "type": "enum",
-      "members": {
-        "PLATFORM_UNAVAILABLE": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "platformUnavailable"
-          }
-        }
-      }
-    },
-    "com.inboxapp.api#PlatformUnavailableDetails": {
-      "type": "structure",
-      "members": {
-        "retryAfterSeconds": {
-          "target": "smithy.api#Integer",
-          "traits": {
-            "smithy.api#required": {},
-            "com.inboxapp.codegen#nullable": {}
-          }
-        }
       }
     },
     "com.inboxapp.api#ThreadsDelete": {
@@ -5135,8 +6850,8 @@
         "campaign": {
           "target": "com.inboxapp.api#MessageSentByCampaign"
         },
-        "api": {
-          "target": "com.inboxapp.api#MessageSentByApi"
+        "aPIToken": {
+          "target": "com.inboxapp.api#MessageSentByAPIToken"
         }
       },
       "traits": {
@@ -5279,11 +6994,11 @@
         }
       }
     },
-    "com.inboxapp.api#MessageSentByApi": {
+    "com.inboxapp.api#MessageSentByAPIToken": {
       "type": "structure",
       "members": {
         "type": {
-          "target": "com.inboxapp.api#MessageSentByApiType",
+          "target": "com.inboxapp.api#MessageSentByAPITokenType",
           "traits": {
             "smithy.api#required": {}
           }
@@ -5296,14 +7011,14 @@
           }
         },
         "token": {
-          "target": "com.inboxapp.api#MessageSentByApiToken"
+          "target": "com.inboxapp.api#MessageSentByAPITokenToken"
         }
       },
       "traits": {
         "smithy.api#documentation": "An API token sent it. `tokenId` is null on messages sent before tokens were recorded, and `token` is absent once the token is deleted."
       }
     },
-    "com.inboxapp.api#MessageSentByApiType": {
+    "com.inboxapp.api#MessageSentByAPITokenType": {
       "type": "enum",
       "members": {
         "API": {
@@ -5314,7 +7029,7 @@
         }
       }
     },
-    "com.inboxapp.api#MessageSentByApiToken": {
+    "com.inboxapp.api#MessageSentByAPITokenToken": {
       "type": "structure",
       "members": {
         "id": {
@@ -5487,7 +7202,7 @@
           "target": "smithy.api#String",
           "traits": {
             "smithy.api#required": {},
-            "smithy.api#documentation": "The platform username without its display prefix. Lookups take this form."
+            "smithy.api#documentation": "The platform username, without a display prefix such as `@`."
           }
         },
         "displayName": {
@@ -5752,28 +7467,28 @@
           }
         },
         "sizeBytes": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#AttachmentMediaSizeBytes",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {}
           }
         },
         "width": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#AttachmentMediaWidth",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {}
           }
         },
         "height": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#AttachmentMediaHeight",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {}
           }
         },
         "aspectRatio": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#AttachmentMediaAspectRatio",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {},
@@ -5781,7 +7496,7 @@
           }
         },
         "durationSeconds": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#AttachmentMediaDurationSeconds",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {},
@@ -5862,6 +7577,197 @@
         "com.inboxapp.codegen#open": true
       }
     },
+    "com.inboxapp.api#AttachmentMediaSizeBytes": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#AttachmentMediaSizeBytesString"
+        }
+      }
+    },
+    "com.inboxapp.api#AttachmentMediaSizeBytesString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#AttachmentMediaWidth": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#AttachmentMediaWidthString"
+        }
+      }
+    },
+    "com.inboxapp.api#AttachmentMediaWidthString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#AttachmentMediaHeight": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#AttachmentMediaHeightString"
+        }
+      }
+    },
+    "com.inboxapp.api#AttachmentMediaHeightString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#AttachmentMediaAspectRatio": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#AttachmentMediaAspectRatioString"
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "Width divided by height."
+      }
+    },
+    "com.inboxapp.api#AttachmentMediaAspectRatioString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#AttachmentMediaDurationSeconds": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#AttachmentMediaDurationSecondsString"
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "Video and audio only."
+      }
+    },
+    "com.inboxapp.api#AttachmentMediaDurationSecondsString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
     "com.inboxapp.api#AttachmentMediaStatus": {
       "type": "enum",
       "members": {
@@ -5913,19 +7819,93 @@
           }
         },
         "width": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#AttachmentMediaPosterWidth",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {}
           }
         },
         "height": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#AttachmentMediaPosterHeight",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {}
           }
         }
+      }
+    },
+    "com.inboxapp.api#AttachmentMediaPosterWidth": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#AttachmentMediaPosterWidthString"
+        }
+      }
+    },
+    "com.inboxapp.api#AttachmentMediaPosterWidthString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#AttachmentMediaPosterHeight": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#AttachmentMediaPosterHeightString"
+        }
+      }
+    },
+    "com.inboxapp.api#AttachmentMediaPosterHeightString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
       }
     },
     "com.inboxapp.api#AttachmentCard": {
@@ -6209,6 +8189,9 @@
         "twitter": {
           "target": "com.inboxapp.api#MessagePlatformDataTwitter"
         },
+        "linkedin": {
+          "target": "com.inboxapp.api#MessagePlatformDataLinkedin"
+        },
         "other": {
           "target": "com.inboxapp.api#MessagePlatformDataOther"
         }
@@ -6243,6 +8226,28 @@
           "target": "smithy.api#Unit",
           "traits": {
             "smithy.api#enumValue": "twitter"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#MessagePlatformDataLinkedin": {
+      "type": "structure",
+      "members": {
+        "_tag": {
+          "target": "com.inboxapp.api#MessagePlatformDataLinkedinTag",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#MessagePlatformDataLinkedinTag": {
+      "type": "enum",
+      "members": {
+        "LINKEDIN": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "linkedin"
           }
         }
       }
@@ -6603,6 +8608,12 @@
             "smithy.api#enumValue": "message:forward"
           }
         },
+        "MESSAGE_ANSWER": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message:answer"
+          }
+        },
         "MEDIA_IMAGE": {
           "target": "smithy.api#Unit",
           "traits": {
@@ -6643,6 +8654,12 @@
           "target": "smithy.api#Unit",
           "traits": {
             "smithy.api#enumValue": "thread:typing:receive"
+          }
+        },
+        "THREAD_SEEN_RECEIVE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread:seen:receive"
           }
         },
         "THREAD_MESSAGE_REQUESTS": {
@@ -6697,6 +8714,30 @@
           "target": "smithy.api#Unit",
           "traits": {
             "smithy.api#enumValue": "profile:unfollow"
+          }
+        },
+        "PROFILE_CONNECT": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:connect"
+          }
+        },
+        "PROFILE_CONNECT_NOTE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:connect:note"
+          }
+        },
+        "PROFILE_RESOLVE_ID": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:resolve:id"
+          }
+        },
+        "PROFILE_RESOLVE_USERNAME": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:resolve:username"
           }
         }
       },
@@ -6816,6 +8857,12 @@
             "smithy.api#enumValue": "message:forward"
           }
         },
+        "MESSAGE_ANSWER": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message:answer"
+          }
+        },
         "MEDIA_IMAGE": {
           "target": "smithy.api#Unit",
           "traits": {
@@ -6856,6 +8903,12 @@
           "target": "smithy.api#Unit",
           "traits": {
             "smithy.api#enumValue": "thread:typing:receive"
+          }
+        },
+        "THREAD_SEEN_RECEIVE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread:seen:receive"
           }
         },
         "THREAD_MESSAGE_REQUESTS": {
@@ -6910,6 +8963,30 @@
           "target": "smithy.api#Unit",
           "traits": {
             "smithy.api#enumValue": "profile:unfollow"
+          }
+        },
+        "PROFILE_CONNECT": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:connect"
+          }
+        },
+        "PROFILE_CONNECT_NOTE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:connect:note"
+          }
+        },
+        "PROFILE_RESOLVE_ID": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:resolve:id"
+          }
+        },
+        "PROFILE_RESOLVE_USERNAME": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile:resolve:username"
           }
         }
       },
@@ -7251,12 +9328,12 @@
         "contact": {
           "target": "com.inboxapp.api#SendRequestTargetContact"
         },
-        "profile": {
-          "target": "com.inboxapp.api#SendRequestTargetProfile"
+        "profileByPlatformID": {
+          "target": "com.inboxapp.api#SendRequestTargetProfileByPlatformID"
+        },
+        "profileByUsername": {
+          "target": "com.inboxapp.api#SendRequestTargetProfileByUsername"
         }
-      },
-      "traits": {
-        "com.inboxapp.codegen#discriminator": "type"
       }
     },
     "com.inboxapp.api#SendRequestTargetThread": {
@@ -7328,11 +9405,11 @@
         }
       }
     },
-    "com.inboxapp.api#SendRequestTargetProfile": {
+    "com.inboxapp.api#SendRequestTargetProfileByPlatformID": {
       "type": "structure",
       "members": {
         "type": {
-          "target": "com.inboxapp.api#SendRequestTargetProfileType",
+          "target": "com.inboxapp.api#SendRequestTargetProfileByPlatformIDType",
           "traits": {
             "smithy.api#required": {}
           }
@@ -7355,7 +9432,7 @@
           "target": "smithy.api#String",
           "traits": {
             "smithy.api#required": {},
-            "smithy.api#documentation": "The ID the platform gives this object. Only meaningful next to its `platform`."
+            "smithy.api#documentation": "The person's ID on the platform. Reaching someone Inboxapp hasn't stored needs the account link's `profile:resolve:id`."
           }
         }
       },
@@ -7363,7 +9440,53 @@
         "smithy.api#documentation": "A platform user, in its existing thread or a new one. Without the Advanced API add-on, the profile must already belong to one of the team's contacts."
       }
     },
-    "com.inboxapp.api#SendRequestTargetProfileType": {
+    "com.inboxapp.api#SendRequestTargetProfileByPlatformIDType": {
+      "type": "enum",
+      "members": {
+        "PROFILE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#SendRequestTargetProfileByUsername": {
+      "type": "structure",
+      "members": {
+        "type": {
+          "target": "com.inboxapp.api#SendRequestTargetProfileByUsernameType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "accountLinkId": {
+          "target": "com.inboxapp.api#Cuid2",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The account link to send from."
+          }
+        },
+        "platform": {
+          "target": "com.inboxapp.api#Platform",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "Must be the account link's platform."
+          }
+        },
+        "username": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The person's username on the platform, without a display prefix such as `@`. On LinkedIn, what follows `/in/` in their profile URL: the vanity name or the `ACoA…` profile ID. Reaching someone Inboxapp hasn't stored needs the account link's `profile:resolve:username`."
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "A platform user, in its existing thread or a new one. Without the Advanced API add-on, the profile must already belong to one of the team's contacts."
+      }
+    },
+    "com.inboxapp.api#SendRequestTargetProfileByUsernameType": {
       "type": "enum",
       "members": {
         "PROFILE": {
@@ -7401,66 +9524,6 @@
           "target": "com.inboxapp.api#Cuid2",
           "traits": {
             "smithy.api#documentation": "A message in the thread this send lands in, to reply to."
-          }
-        }
-      }
-    },
-    "com.inboxapp.api#PlanRequired": {
-      "type": "structure",
-      "members": {
-        "code": {
-          "target": "com.inboxapp.api#PlanRequiredCode",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "message": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "details": {
-          "target": "com.inboxapp.api#PlanRequiredDetails",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        },
-        "requestId": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
-          }
-        }
-      },
-      "traits": {
-        "com.inboxapp.codegen#errorMatchers": [
-          {
-            "code": "planRequired"
-          }
-        ],
-        "smithy.api#error": "client",
-        "smithy.api#httpError": 403
-      }
-    },
-    "com.inboxapp.api#PlanRequiredCode": {
-      "type": "enum",
-      "members": {
-        "PLAN_REQUIRED": {
-          "target": "smithy.api#Unit",
-          "traits": {
-            "smithy.api#enumValue": "planRequired"
-          }
-        }
-      }
-    },
-    "com.inboxapp.api#PlanRequiredDetails": {
-      "type": "structure",
-      "members": {
-        "feature": {
-          "target": "smithy.api#String",
-          "traits": {
-            "smithy.api#required": {}
           }
         }
       }
@@ -8023,7 +10086,7 @@
           "target": "com.inboxapp.api#MessageHistoryDeletionScope",
           "traits": {
             "smithy.api#required": {},
-            "smithy.api#documentation": "`self` deletes for the account link only, which needs `message:delete:self`. `all` unsends for every participant, which needs `message:unsend`."
+            "smithy.api#documentation": "`self` was deleted for the account link only. `all` was unsent for every participant. `expired` disappeared when its disappearing-messages timer ran out."
           }
         },
         "origin": {
@@ -8050,10 +10113,16 @@
           "traits": {
             "smithy.api#enumValue": "all"
           }
+        },
+        "EXPIRED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "expired"
+          }
         }
       },
       "traits": {
-        "smithy.api#documentation": "`self` deletes for the account link only, which needs `message:delete:self`. `all` unsends for every participant, which needs `message:unsend`.",
+        "smithy.api#documentation": "`self` was deleted for the account link only. `all` was unsent for every participant. `expired` disappeared when its disappearing-messages timer ran out.",
         "com.inboxapp.codegen#open": true
       }
     },
@@ -8346,6 +10415,24 @@
         },
         {
           "target": "com.inboxapp.api#MessageNotFound"
+        },
+        {
+          "target": "com.inboxapp.api#AccountLinkDisconnected"
+        },
+        {
+          "target": "com.inboxapp.api#IntegrationSetupRequired"
+        },
+        {
+          "target": "com.inboxapp.api#CapabilityNotSupported"
+        },
+        {
+          "target": "com.inboxapp.api#PlatformRateLimited"
+        },
+        {
+          "target": "com.inboxapp.api#PlatformError"
+        },
+        {
+          "target": "com.inboxapp.api#PlatformUnavailable"
         }
       ],
       "traits": {
@@ -8357,6 +10444,385 @@
         "com.inboxapp.codegen#operationId": "messages.attachment",
         "com.inboxapp.codegen#operationName": "attachment",
         "smithy.api#documentation": "Get attachment\n\n`200` with a fresh URL once ready, `202` while the media is pending or processing. A card index is `invalidRequest`."
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestCreateTarget": {
+      "type": "union",
+      "members": {
+        "thread": {
+          "target": "com.inboxapp.api#ConnectionRequestCreateTargetThread"
+        },
+        "contact": {
+          "target": "com.inboxapp.api#ConnectionRequestCreateTargetContact"
+        },
+        "profileByPlatformID": {
+          "target": "com.inboxapp.api#ConnectionRequestCreateTargetProfileByPlatformID"
+        },
+        "profileByUsername": {
+          "target": "com.inboxapp.api#ConnectionRequestCreateTargetProfileByUsername"
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestCreateTargetThread": {
+      "type": "structure",
+      "members": {
+        "type": {
+          "target": "com.inboxapp.api#ConnectionRequestCreateTargetThreadType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "threadId": {
+          "target": "com.inboxapp.api#Cuid2",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "The profile of an existing one-to-one thread, from the thread's account link."
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestCreateTargetThreadType": {
+      "type": "enum",
+      "members": {
+        "THREAD": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestCreateTargetContact": {
+      "type": "structure",
+      "members": {
+        "type": {
+          "target": "com.inboxapp.api#ConnectionRequestCreateTargetContactType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "accountLinkId": {
+          "target": "com.inboxapp.api#Cuid2",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The account link to send the request from."
+          }
+        },
+        "contactId": {
+          "target": "com.inboxapp.api#Cuid2",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "The contact's profile on the account link's platform. Fails with `recipientUnavailable` when the contact has none there, and `profileAmbiguous` when it has several."
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestCreateTargetContactType": {
+      "type": "enum",
+      "members": {
+        "CONTACT": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "contact"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestCreateTargetProfileByPlatformID": {
+      "type": "structure",
+      "members": {
+        "type": {
+          "target": "com.inboxapp.api#ConnectionRequestCreateTargetProfileByPlatformIDType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "accountLinkId": {
+          "target": "com.inboxapp.api#Cuid2",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The account link to send the request from."
+          }
+        },
+        "platform": {
+          "target": "com.inboxapp.api#Platform",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "Must be the account link's platform."
+          }
+        },
+        "platformId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The person's ID on the platform. Reaching someone Inboxapp hasn't stored needs the account link's `profile:resolve:id`."
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "A platform user. Without the Advanced API add-on, the profile must already belong to one of the team's contacts."
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestCreateTargetProfileByPlatformIDType": {
+      "type": "enum",
+      "members": {
+        "PROFILE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestCreateTargetProfileByUsername": {
+      "type": "structure",
+      "members": {
+        "type": {
+          "target": "com.inboxapp.api#ConnectionRequestCreateTargetProfileByUsernameType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "accountLinkId": {
+          "target": "com.inboxapp.api#Cuid2",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The account link to send the request from."
+          }
+        },
+        "platform": {
+          "target": "com.inboxapp.api#Platform",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "Must be the account link's platform."
+          }
+        },
+        "username": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The person's username on the platform, without a display prefix such as `@`. On LinkedIn, what follows `/in/` in their profile URL: the vanity name or the `ACoA…` profile ID. Reaching someone Inboxapp hasn't stored needs the account link's `profile:resolve:username`."
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "A platform user. Without the Advanced API add-on, the profile must already belong to one of the team's contacts."
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestCreateTargetProfileByUsernameType": {
+      "type": "enum",
+      "members": {
+        "PROFILE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "profile"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#RelationshipsConnectRequest": {
+      "type": "structure",
+      "members": {
+        "target": {
+          "target": "com.inboxapp.api#ConnectionRequestCreateTarget",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "note": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#documentation": "Up to the platform's `limits.connectNoteCharacters`. Needs `profile:connect:note`, and fails with `connectionRefused` once the account has no notes left."
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequest": {
+      "type": "structure",
+      "members": {
+        "accountLinkId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "profileId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "note": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {}
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "A connection request the platform accepted for delivery."
+      }
+    },
+    "com.inboxapp.api#ConnectionRefused": {
+      "type": "structure",
+      "members": {
+        "code": {
+          "target": "com.inboxapp.api#ConnectionRefusedCode",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "message": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "details": {
+          "target": "com.inboxapp.api#ConnectionRefusedDetails",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "requestId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#errorMatchers": [
+          {
+            "code": "connectionRefused"
+          }
+        ],
+        "smithy.api#error": "client",
+        "smithy.api#httpError": 422
+      }
+    },
+    "com.inboxapp.api#ConnectionRefusedCode": {
+      "type": "enum",
+      "members": {
+        "CONNECTION_REFUSED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "connectionRefused"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRefusedDetails": {
+      "type": "structure",
+      "members": {
+        "reason": {
+          "target": "com.inboxapp.api#ConnectionRefusedDetailsReason",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "`notAllowed` when the profile can't be invited right now, such as when already connected or invited. `noteAllowanceSpent` when the account has no notes left; send without one."
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRefusedDetailsReason": {
+      "type": "enum",
+      "members": {
+        "NOT_ALLOWED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "notAllowed"
+          }
+        },
+        "NOTE_TOO_LONG": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "noteTooLong"
+          }
+        },
+        "NOTE_ALLOWANCE_SPENT": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "noteAllowanceSpent"
+          }
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "`notAllowed` when the profile can't be invited right now, such as when already connected or invited. `noteAllowanceSpent` when the account has no notes left; send without one.",
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#RelationshipsConnect": {
+      "type": "operation",
+      "input": {
+        "target": "com.inboxapp.api#RelationshipsConnectRequest"
+      },
+      "output": {
+        "target": "com.inboxapp.api#ConnectionRequest"
+      },
+      "errors": [
+        {
+          "target": "com.inboxapp.api#PlatformNotAvailable"
+        },
+        {
+          "target": "com.inboxapp.api#PlanRequired"
+        },
+        {
+          "target": "com.inboxapp.api#WorkspaceLocked"
+        },
+        {
+          "target": "com.inboxapp.api#ThreadNotFound"
+        },
+        {
+          "target": "com.inboxapp.api#ContactNotFound"
+        },
+        {
+          "target": "com.inboxapp.api#AccountLinkNotFound"
+        },
+        {
+          "target": "com.inboxapp.api#AccountLinkDisconnected"
+        },
+        {
+          "target": "com.inboxapp.api#IntegrationSetupRequired"
+        },
+        {
+          "target": "com.inboxapp.api#RecipientUnavailable"
+        },
+        {
+          "target": "com.inboxapp.api#PlatformNotSupported"
+        },
+        {
+          "target": "com.inboxapp.api#ProfileAmbiguous"
+        },
+        {
+          "target": "com.inboxapp.api#ConnectionRefused"
+        },
+        {
+          "target": "com.inboxapp.api#CapabilityNotSupported"
+        },
+        {
+          "target": "com.inboxapp.api#PlatformRateLimited"
+        },
+        {
+          "target": "com.inboxapp.api#PlatformError"
+        },
+        {
+          "target": "com.inboxapp.api#PlatformUnavailable"
+        }
+      ],
+      "traits": {
+        "smithy.api#http": {
+          "method": "POST",
+          "uri": "/connection-requests",
+          "code": 201
+        },
+        "com.inboxapp.codegen#operationId": "relationships.connect",
+        "com.inboxapp.codegen#operationName": "connect",
+        "smithy.api#documentation": "Send connection request\n\nInvites a profile to connect with the account link. Needs `profile:connect`."
       }
     },
     "com.inboxapp.api#TagsListRequest": {
@@ -9112,6 +11578,12 @@
             "smithy.api#enumValue": "message.reactionRemoved"
           }
         },
+        "MESSAGE_SEEN": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message.seen"
+          }
+        },
         "CONTACT_STATUS_CHANGED": {
           "target": "smithy.api#Unit",
           "traits": {
@@ -9225,6 +11697,30 @@
           "traits": {
             "smithy.api#enumValue": "target.replied"
           }
+        },
+        "CONNECTION_REQUEST_SENT": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "connectionRequest.sent"
+          }
+        },
+        "CONNECTION_REQUEST_ACCEPTED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "connectionRequest.accepted"
+          }
+        },
+        "CONNECTION_REQUEST_WITHDRAWN": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "connectionRequest.withdrawn"
+          }
+        },
+        "FOLLOWER_CREATED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "follower.created"
+          }
         }
       }
     },
@@ -9270,7 +11766,7 @@
           }
         },
         "lastSeq": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#EventPageLastSeq",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {},
@@ -9326,6 +11822,9 @@
         },
         "messageReactionRemovedEvent": {
           "target": "com.inboxapp.api#MessageReactionRemovedEvent"
+        },
+        "messageSeenEvent": {
+          "target": "com.inboxapp.api#MessageSeenEvent"
         },
         "contactStatusChangedEvent": {
           "target": "com.inboxapp.api#ContactStatusChangedEvent"
@@ -9383,6 +11882,18 @@
         },
         "targetRepliedEvent": {
           "target": "com.inboxapp.api#TargetRepliedEvent"
+        },
+        "connectionRequestSentEvent": {
+          "target": "com.inboxapp.api#ConnectionRequestSentEvent"
+        },
+        "connectionRequestAcceptedEvent": {
+          "target": "com.inboxapp.api#ConnectionRequestAcceptedEvent"
+        },
+        "connectionRequestWithdrawnEvent": {
+          "target": "com.inboxapp.api#ConnectionRequestWithdrawnEvent"
+        },
+        "followerCreatedEvent": {
+          "target": "com.inboxapp.api#FollowerCreatedEvent"
         }
       },
       "traits": {
@@ -10652,7 +13163,8 @@
         "scope": {
           "target": "com.inboxapp.api#MessageDeletedEventDataScope",
           "traits": {
-            "smithy.api#required": {}
+            "smithy.api#required": {},
+            "smithy.api#documentation": "`self` was deleted for the account link only. `all` was unsent for every participant. `expired` disappeared when its disappearing-messages timer ran out."
           }
         }
       }
@@ -10671,9 +13183,16 @@
           "traits": {
             "smithy.api#enumValue": "all"
           }
+        },
+        "EXPIRED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "expired"
+          }
         }
       },
       "traits": {
+        "smithy.api#documentation": "`self` was deleted for the account link only. `all` was unsent for every participant. `expired` disappeared when its disappearing-messages timer ran out.",
         "com.inboxapp.codegen#open": true
       }
     },
@@ -10936,6 +13455,139 @@
           }
         }
       }
+    },
+    "com.inboxapp.api#MessageSeenEvent": {
+      "type": "structure",
+      "members": {
+        "id": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "seq": {
+          "target": "smithy.api#Double",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "type": {
+          "target": "com.inboxapp.api#MessageSeenEventType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "apiVersion": {
+          "target": "com.inboxapp.api#MessageSeenEventApiVersion",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "createdAt": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "object": {
+          "target": "com.inboxapp.api#MessageSeenEventObject",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "data": {
+          "target": "com.inboxapp.api#MessageSeenEventData",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#webhookEvent": "message.seen"
+      }
+    },
+    "com.inboxapp.api#MessageSeenEventType": {
+      "type": "enum",
+      "members": {
+        "MESSAGE_SEEN": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message.seen"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#MessageSeenEventApiVersion": {
+      "type": "enum",
+      "members": {
+        "VALUE_2": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "2"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#MessageSeenEventObject": {
+      "type": "structure",
+      "members": {
+        "type": {
+          "target": "com.inboxapp.api#MessageSeenEventObjectType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "id": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "url": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The object's path under the API; 404 once it's deleted."
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#MessageSeenEventObjectType": {
+      "type": "enum",
+      "members": {
+        "MESSAGE": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "message"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#MessageSeenEventData": {
+      "type": "structure",
+      "members": {
+        "threadId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "seenByPlatformId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "seenAt": {
+          "target": "com.inboxapp.api#IsoDateTime",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#IsoDateTime": {
+      "type": "string"
     },
     "com.inboxapp.api#ContactStatusChangedEvent": {
       "type": "structure",
@@ -11410,12 +14062,49 @@
       "type": "structure",
       "members": {
         "valuation": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#ContactValuationChangedEventDataValuation",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {}
           }
         }
+      }
+    },
+    "com.inboxapp.api#ContactValuationChangedEventDataValuation": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#ContactValuationChangedEventDataValuationString"
+        }
+      }
+    },
+    "com.inboxapp.api#ContactValuationChangedEventDataValuationString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
       }
     },
     "com.inboxapp.api#ContactAssigneeChangedEvent": {
@@ -12844,12 +15533,49 @@
           }
         },
         "stepNumber": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#TargetContactedEventDataStepNumber",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {}
           }
         }
+      }
+    },
+    "com.inboxapp.api#TargetContactedEventDataStepNumber": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#TargetContactedEventDataStepNumberString"
+        }
+      }
+    },
+    "com.inboxapp.api#TargetContactedEventDataStepNumberString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
       }
     },
     "com.inboxapp.api#TargetFollowUpSentEvent": {
@@ -12982,12 +15708,49 @@
           }
         },
         "stepNumber": {
-          "target": "smithy.api#Double",
+          "target": "com.inboxapp.api#TargetFollowUpSentEventDataStepNumber",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {}
           }
         }
+      }
+    },
+    "com.inboxapp.api#TargetFollowUpSentEventDataStepNumber": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#TargetFollowUpSentEventDataStepNumberString"
+        }
+      }
+    },
+    "com.inboxapp.api#TargetFollowUpSentEventDataStepNumberString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
       }
     },
     "com.inboxapp.api#TargetRepliedEvent": {
@@ -13120,7 +15883,531 @@
           }
         },
         "stepNumber": {
+          "target": "com.inboxapp.api#TargetRepliedEventDataStepNumber",
+          "traits": {
+            "smithy.api#required": {},
+            "com.inboxapp.codegen#nullable": {}
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#TargetRepliedEventDataStepNumber": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#TargetRepliedEventDataStepNumberString"
+        }
+      }
+    },
+    "com.inboxapp.api#TargetRepliedEventDataStepNumberString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestSentEvent": {
+      "type": "structure",
+      "members": {
+        "id": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "seq": {
           "target": "smithy.api#Double",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "type": {
+          "target": "com.inboxapp.api#ConnectionRequestSentEventType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "apiVersion": {
+          "target": "com.inboxapp.api#ConnectionRequestSentEventApiVersion",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "createdAt": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "object": {
+          "target": "com.inboxapp.api#ConnectionRequestSentEventObject",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "data": {
+          "target": "smithy.api#Document",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#webhookEvent": "connectionRequest.sent"
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestSentEventType": {
+      "type": "enum",
+      "members": {
+        "CONNECTION_REQUEST_SENT": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "connectionRequest.sent"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestSentEventApiVersion": {
+      "type": "enum",
+      "members": {
+        "VALUE_2": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "2"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestSentEventObject": {
+      "type": "structure",
+      "members": {
+        "type": {
+          "target": "com.inboxapp.api#ConnectionRequestSentEventObjectType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "id": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "url": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The object's path under the API; 404 once it's deleted."
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestSentEventObjectType": {
+      "type": "enum",
+      "members": {
+        "THREAD": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestAcceptedEvent": {
+      "type": "structure",
+      "members": {
+        "id": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "seq": {
+          "target": "smithy.api#Double",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "type": {
+          "target": "com.inboxapp.api#ConnectionRequestAcceptedEventType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "apiVersion": {
+          "target": "com.inboxapp.api#ConnectionRequestAcceptedEventApiVersion",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "createdAt": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "object": {
+          "target": "com.inboxapp.api#ConnectionRequestAcceptedEventObject",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "data": {
+          "target": "smithy.api#Document",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#webhookEvent": "connectionRequest.accepted"
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestAcceptedEventType": {
+      "type": "enum",
+      "members": {
+        "CONNECTION_REQUEST_ACCEPTED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "connectionRequest.accepted"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestAcceptedEventApiVersion": {
+      "type": "enum",
+      "members": {
+        "VALUE_2": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "2"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestAcceptedEventObject": {
+      "type": "structure",
+      "members": {
+        "type": {
+          "target": "com.inboxapp.api#ConnectionRequestAcceptedEventObjectType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "id": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "url": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The object's path under the API; 404 once it's deleted."
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestAcceptedEventObjectType": {
+      "type": "enum",
+      "members": {
+        "THREAD": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestWithdrawnEvent": {
+      "type": "structure",
+      "members": {
+        "id": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "seq": {
+          "target": "smithy.api#Double",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "type": {
+          "target": "com.inboxapp.api#ConnectionRequestWithdrawnEventType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "apiVersion": {
+          "target": "com.inboxapp.api#ConnectionRequestWithdrawnEventApiVersion",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "createdAt": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "object": {
+          "target": "com.inboxapp.api#ConnectionRequestWithdrawnEventObject",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "data": {
+          "target": "smithy.api#Document",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#webhookEvent": "connectionRequest.withdrawn"
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestWithdrawnEventType": {
+      "type": "enum",
+      "members": {
+        "CONNECTION_REQUEST_WITHDRAWN": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "connectionRequest.withdrawn"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestWithdrawnEventApiVersion": {
+      "type": "enum",
+      "members": {
+        "VALUE_2": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "2"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestWithdrawnEventObject": {
+      "type": "structure",
+      "members": {
+        "type": {
+          "target": "com.inboxapp.api#ConnectionRequestWithdrawnEventObjectType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "id": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "url": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The object's path under the API; 404 once it's deleted."
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#ConnectionRequestWithdrawnEventObjectType": {
+      "type": "enum",
+      "members": {
+        "THREAD": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#FollowerCreatedEvent": {
+      "type": "structure",
+      "members": {
+        "id": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "seq": {
+          "target": "smithy.api#Double",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "type": {
+          "target": "com.inboxapp.api#FollowerCreatedEventType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "apiVersion": {
+          "target": "com.inboxapp.api#FollowerCreatedEventApiVersion",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "createdAt": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "object": {
+          "target": "com.inboxapp.api#FollowerCreatedEventObject",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "data": {
+          "target": "com.inboxapp.api#FollowerCreatedEventData",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#webhookEvent": "follower.created"
+      }
+    },
+    "com.inboxapp.api#FollowerCreatedEventType": {
+      "type": "enum",
+      "members": {
+        "FOLLOWER_CREATED": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "follower.created"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#FollowerCreatedEventApiVersion": {
+      "type": "enum",
+      "members": {
+        "VALUE_2": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "2"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#FollowerCreatedEventObject": {
+      "type": "structure",
+      "members": {
+        "type": {
+          "target": "com.inboxapp.api#FollowerCreatedEventObjectType",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "id": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "url": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {},
+            "smithy.api#documentation": "The object's path under the API; 404 once it's deleted."
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#FollowerCreatedEventObjectType": {
+      "type": "enum",
+      "members": {
+        "THREAD": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "thread"
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#FollowerCreatedEventData": {
+      "type": "structure",
+      "members": {
+        "accountLinkId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "profile": {
+          "target": "com.inboxapp.api#FollowerCreatedEventDataProfile",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        }
+      }
+    },
+    "com.inboxapp.api#FollowerCreatedEventDataProfile": {
+      "type": "structure",
+      "members": {
+        "id": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "platform": {
+          "target": "com.inboxapp.api#Platform",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "platformId": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "username": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "displayName": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "avatarUrl": {
+          "target": "smithy.api#String",
           "traits": {
             "smithy.api#required": {},
             "com.inboxapp.codegen#nullable": {}
@@ -13132,6 +16419,46 @@
       "type": "list",
       "member": {
         "target": "com.inboxapp.api#EventPageDataItem"
+      }
+    },
+    "com.inboxapp.api#EventPageLastSeq": {
+      "type": "union",
+      "members": {
+        "number": {
+          "target": "smithy.api#Double"
+        },
+        "string": {
+          "target": "com.inboxapp.api#EventPageLastSeqString"
+        }
+      },
+      "traits": {
+        "smithy.api#documentation": "The last sequence number read, including events this page leaves out. Null when nothing was read. Pass it as `afterSeq` to continue."
+      }
+    },
+    "com.inboxapp.api#EventPageLastSeqString": {
+      "type": "enum",
+      "members": {
+        "INFINITY": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "Infinity"
+          }
+        },
+        "INFINITY_1": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "-Infinity"
+          }
+        },
+        "NA_N": {
+          "target": "smithy.api#Unit",
+          "traits": {
+            "smithy.api#enumValue": "NaN"
+          }
+        }
+      },
+      "traits": {
+        "com.inboxapp.codegen#open": true
       }
     },
     "com.inboxapp.api#EventsList": {
