@@ -90,14 +90,6 @@ export class CapabilityNotSupported extends ApiError<
   override name = "CapabilityNotSupported";
 }
 
-/** `429 peopleSearchRateLimited` */
-export class PeopleSearchRateLimited extends ApiError<
-  "peopleSearchRateLimited",
-  T.PeopleSearchRateLimitedDetails
-> {
-  override name = "PeopleSearchRateLimited";
-}
-
 /** `429 platformRateLimited` */
 export class PlatformRateLimited extends ApiError<
   "platformRateLimited",
@@ -228,7 +220,6 @@ export const errorsByCode = {
   accountLinkDisconnected: AccountLinkDisconnected,
   integrationSetupRequired: IntegrationSetupRequired,
   capabilityNotSupported: CapabilityNotSupported,
-  peopleSearchRateLimited: PeopleSearchRateLimited,
   platformRateLimited: PlatformRateLimited,
   platformError: PlatformError,
   platformUnavailable: PlatformUnavailable,
@@ -258,7 +249,6 @@ export type KnownApiError = InstanceType<ErrorsByCode[keyof ErrorsByCode]>;
 export const retryableCodes = {
   rateLimited: "throttling",
   internal: "transient",
-  peopleSearchRateLimited: "throttling",
   platformRateLimited: "throttling",
   platformError: "transient",
   platformUnavailable: "transient",
@@ -311,7 +301,6 @@ export type PeopleSearchError =
   | AccountLinkDisconnected
   | IntegrationSetupRequired
   | CapabilityNotSupported
-  | PeopleSearchRateLimited
   | PlatformRateLimited
   | PlatformError
   | PlatformUnavailable

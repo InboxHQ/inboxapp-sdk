@@ -668,7 +668,6 @@ export type PeopleSearchFailureCode =
   | "integrationSetupRequired"
   | "capabilityNotSupported"
   | "platformRateLimited"
-  | "peopleSearchRateLimited"
   | "platformError"
   | "platformUnavailable"
   | (string & {});
@@ -726,18 +725,15 @@ export type CapabilityNotSupportedDetailsCapability =
   | "profile:resolve:username"
   | (string & {});
 
-export interface PeopleSearchRateLimitedDetails {
-  accountLinkId: string;
-  window: PeopleSearchRateLimitedDetailsWindow;
-  limit: number;
-  resetAt: string;
-}
-
-export type PeopleSearchRateLimitedDetailsWindow = "minute" | "hour" | "day" | (string & {});
-
+/** `window`, `limit` and `resetAt` are present when Inboxapp's own limit on calls to the platform as this account link was reached, rather than the platform's. */
 export interface PlatformRateLimitedDetails {
   retryAfterSeconds: number | null;
+  window?: PlatformRateLimitedDetailsWindow;
+  limit?: number;
+  resetAt?: string;
 }
+
+export type PlatformRateLimitedDetailsWindow = "minute" | "hour" | "day" | (string & {});
 
 export interface PlatformUnavailableDetails {
   retryAfterSeconds: number | null;

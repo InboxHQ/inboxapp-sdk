@@ -677,30 +677,21 @@ export type CapabilityNotSupportedDetailsCapability = M.CapabilityNotSupportedDe
 export const CapabilityNotSupportedDetailsCapability =
   /*@__PURE__*/ S.String as any as S.Schema<M.CapabilityNotSupportedDetailsCapability>;
 
-export type PeopleSearchRateLimitedDetails = M.PeopleSearchRateLimitedDetails;
-export const PeopleSearchRateLimitedDetails = /*@__PURE__*/ S.suspend(() =>
-  S.Struct({
-    accountLinkId: S.String,
-    window: PeopleSearchRateLimitedDetailsWindow,
-    limit: S.Number,
-    resetAt: S.String,
-  }),
-).annotate({
-  identifier: "PeopleSearchRateLimitedDetails",
-}) as any as S.Schema<M.PeopleSearchRateLimitedDetails>;
-
-export type PeopleSearchRateLimitedDetailsWindow = M.PeopleSearchRateLimitedDetailsWindow;
-export const PeopleSearchRateLimitedDetailsWindow =
-  /*@__PURE__*/ S.String as any as S.Schema<M.PeopleSearchRateLimitedDetailsWindow>;
-
 export type PlatformRateLimitedDetails = M.PlatformRateLimitedDetails;
 export const PlatformRateLimitedDetails = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
     retryAfterSeconds: S.NullOr(S.Number),
+    window: S.optional(PlatformRateLimitedDetailsWindow),
+    limit: S.optional(S.Number),
+    resetAt: S.optional(S.String),
   }),
 ).annotate({
   identifier: "PlatformRateLimitedDetails",
 }) as any as S.Schema<M.PlatformRateLimitedDetails>;
+
+export type PlatformRateLimitedDetailsWindow = M.PlatformRateLimitedDetailsWindow;
+export const PlatformRateLimitedDetailsWindow =
+  /*@__PURE__*/ S.String as any as S.Schema<M.PlatformRateLimitedDetailsWindow>;
 
 export type PlatformUnavailableDetails = M.PlatformUnavailableDetails;
 export const PlatformUnavailableDetails = /*@__PURE__*/ S.suspend(() =>

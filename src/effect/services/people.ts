@@ -27,7 +27,6 @@ export type SearchError =
   | E.AccountLinkDisconnected
   | E.IntegrationSetupRequired
   | E.CapabilityNotSupported
-  | E.PeopleSearchRateLimited
   | E.PlatformRateLimited
   | E.PlatformError
   | E.PlatformUnavailable
@@ -37,7 +36,7 @@ export type SearchError =
  *
  * Searches people on each platform as one of the team's account links, like the platform's own search box.
  *
- * Needs the Advanced API add-on, and `directory:typeahead` on each account link. Each account link can search 20 times per minute, 300 per hour and 1500 per day, so the platform doesn't flag its session; past a limit, it is listed in `failures` with `peopleSearchRateLimited`.
+ * Needs the Advanced API add-on, and `directory:typeahead` on each account link. Each search is a call to the platform as the account link, and each account link can make 20 per minute, 300 per hour and 1500 per day, so the platform doesn't flag its session; past a limit, it is listed in `failures` with `platformRateLimited`.
  *
  * Use the result's `target` to reach that person on endpoints like `Send message` or `Send connection request`.
  */
@@ -57,7 +56,6 @@ export const search: API.OperationMethod<
     E.AccountLinkDisconnected,
     E.IntegrationSetupRequired,
     E.CapabilityNotSupported,
-    E.PeopleSearchRateLimited,
     E.PlatformRateLimited,
     E.PlatformError,
     E.PlatformUnavailable,

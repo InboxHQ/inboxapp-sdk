@@ -188,19 +188,6 @@ export class CapabilityNotSupported
     [{ code: "capabilityNotSupported" }],
   ) {}
 
-/** `429 peopleSearchRateLimited` */
-export class PeopleSearchRateLimited
-  extends /*@__PURE__*/ T.applyErrorMatchers(
-    /*@__PURE__*/ Schema.TaggedError<PeopleSearchRateLimited>()("PeopleSearchRateLimited", {
-      code: Schema.Literal("peopleSearchRateLimited"),
-      message: Schema.String,
-      details: Details<M.PeopleSearchRateLimitedDetails>(),
-      requestId: Schema.String,
-      retryAfter: Schema.optional(DurationSchema),
-    }).pipe(Category.withThrottlingError, Category.withRetryable({ throttling: true })),
-    [{ code: "peopleSearchRateLimited" }],
-  ) {}
-
 /** `429 platformRateLimited` */
 export class PlatformRateLimited
   extends /*@__PURE__*/ T.applyErrorMatchers(
