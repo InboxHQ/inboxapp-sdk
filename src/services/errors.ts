@@ -111,6 +111,21 @@ export class PlatformUnavailable extends ApiError<
   override name = "PlatformUnavailable";
 }
 
+/** `403 memberRequired` */
+export class MemberRequired extends ApiError<"memberRequired", T.MemberRequiredDetails> {
+  override name = "MemberRequired";
+}
+
+/** `404 viewNotFound` */
+export class ViewNotFound extends ApiError<"viewNotFound", null> {
+  override name = "ViewNotFound";
+}
+
+/** `503 searchUnavailable` */
+export class SearchUnavailable extends ApiError<"searchUnavailable", null> {
+  override name = "SearchUnavailable";
+}
+
 /** `404 threadNotFound` */
 export class ThreadNotFound extends ApiError<"threadNotFound", null> {
   override name = "ThreadNotFound";
@@ -223,6 +238,9 @@ export const errorsByCode = {
   platformRateLimited: PlatformRateLimited,
   platformError: PlatformError,
   platformUnavailable: PlatformUnavailable,
+  memberRequired: MemberRequired,
+  viewNotFound: ViewNotFound,
+  searchUnavailable: SearchUnavailable,
   threadNotFound: ThreadNotFound,
   messageNotFound: MessageNotFound,
   threadRestricted: ThreadRestricted,
@@ -252,6 +270,7 @@ export const retryableCodes = {
   platformRateLimited: "throttling",
   platformError: "transient",
   platformUnavailable: "transient",
+  searchUnavailable: "transient",
   sendInProgress: "transient",
 } as const;
 
@@ -306,7 +325,27 @@ export type PeopleSearchError =
   | PlatformUnavailable
   | CommonError;
 
-export type ThreadsListError = InvalidCursor | PlatformNotAvailable | CommonError;
+export type ThreadsListError =
+  | InvalidCursor
+  | MemberRequired
+  | PlatformNotAvailable
+  | ViewNotFound
+  | SearchUnavailable
+  | CommonError;
+
+export type ThreadsSearchError =
+  | MemberRequired
+  | PlatformNotAvailable
+  | ViewNotFound
+  | SearchUnavailable
+  | CommonError;
+
+export type ThreadsCountError =
+  | MemberRequired
+  | PlatformNotAvailable
+  | ViewNotFound
+  | SearchUnavailable
+  | CommonError;
 
 export type ThreadsGetError = PlatformNotAvailable | ThreadNotFound | CommonError;
 
@@ -334,6 +373,8 @@ export type ThreadsTypingError =
   | ThreadNotFound
   | CapabilityNotSupported
   | CommonError;
+
+export type ViewsListError = CommonError;
 
 export type MessagesListError = InvalidCursor | PlatformNotAvailable | ThreadNotFound | CommonError;
 

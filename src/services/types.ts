@@ -17,7 +17,7 @@ export interface PlatformInfo {
   threadState: PlatformInfoThreadState;
 }
 
-/** The platform. Every team can use twitter, linkedin; a team may have others enabled. */
+/** The platform. Every team can use twitter, linkedin, whatsapp, telegram; a team may have others enabled. */
 export type Platform = string;
 
 export type PlatformInfoCapabilitiesItem =
@@ -29,14 +29,21 @@ export type PlatformInfoCapabilitiesItem =
   | "message:reply"
   | "message:forward"
   | "message:answer"
+  | "message:poll"
+  | "message:event"
+  | "message:contact"
+  | "message:location"
+  | "message:callback"
   | "media:image"
   | "media:video"
   | "media:gif"
   | "media:file"
   | "media:audio"
+  | "media:sticker"
   | "thread:typing:send"
   | "thread:typing:receive"
   | "thread:seen:receive"
+  | "thread:seen:send"
   | "thread:message-requests"
   | "thread:delete:remote"
   | "directory:typeahead"
@@ -44,6 +51,7 @@ export type PlatformInfoCapabilitiesItem =
   | "thread:archive:mutate"
   | "thread:read:observe"
   | "thread:read:mutate"
+  | "thread:folders:import"
   | "profile:follow"
   | "profile:unfollow"
   | "profile:connect"
@@ -56,7 +64,9 @@ export type PlatformInfoCapabilitiesItem =
 export interface PlatformInfoLimits {
   /** Maximum characters in a message, counting an emoji as one. Null when the platform sets none. */
   characters: number | null;
-  /** Maximum attachments in a message. Null when the platform sets none. */
+  /** Maximum characters in a message that carries media, where it is lower than `characters`. Null when the platform sets none. */
+  captionCharacters: number | null;
+  /** Maximum attachments sent together. A platform that carries one per message delivers each as a message of its own. Null when the platform sets none. */
   mediaCount: number | null;
   /** Maximum size of one attachment. Null when the platform sets none. */
   mediaBytes: number | null;
@@ -84,14 +94,21 @@ export interface PlatformInfoMutationWindows {
   "message:reply"?: number;
   "message:forward"?: number;
   "message:answer"?: number;
+  "message:poll"?: number;
+  "message:event"?: number;
+  "message:contact"?: number;
+  "message:location"?: number;
+  "message:callback"?: number;
   "media:image"?: number;
   "media:video"?: number;
   "media:gif"?: number;
   "media:file"?: number;
   "media:audio"?: number;
+  "media:sticker"?: number;
   "thread:typing:send"?: number;
   "thread:typing:receive"?: number;
   "thread:seen:receive"?: number;
+  "thread:seen:send"?: number;
   "thread:message-requests"?: number;
   "thread:delete:remote"?: number;
   "directory:typeahead"?: number;
@@ -99,6 +116,7 @@ export interface PlatformInfoMutationWindows {
   "thread:archive:mutate"?: number;
   "thread:read:observe"?: number;
   "thread:read:mutate"?: number;
+  "thread:folders:import"?: number;
   "profile:follow"?: number;
   "profile:unfollow"?: number;
   "profile:connect"?: number;
@@ -261,14 +279,21 @@ export type AccountLinkCapabilitiesItem =
   | "message:reply"
   | "message:forward"
   | "message:answer"
+  | "message:poll"
+  | "message:event"
+  | "message:contact"
+  | "message:location"
+  | "message:callback"
   | "media:image"
   | "media:video"
   | "media:gif"
   | "media:file"
   | "media:audio"
+  | "media:sticker"
   | "thread:typing:send"
   | "thread:typing:receive"
   | "thread:seen:receive"
+  | "thread:seen:send"
   | "thread:message-requests"
   | "thread:delete:remote"
   | "directory:typeahead"
@@ -276,6 +301,7 @@ export type AccountLinkCapabilitiesItem =
   | "thread:archive:mutate"
   | "thread:read:observe"
   | "thread:read:mutate"
+  | "thread:folders:import"
   | "profile:follow"
   | "profile:unfollow"
   | "profile:connect"
@@ -326,6 +352,8 @@ export interface Contact {
   /** A status: a pipeline stage on the team's board. */
   statusId: string | null;
   tagIds: Array<string>;
+  /** Each number once: the profiles' own, then those team members added. */
+  phones: Array<ContactPhone>;
   notes: string | null;
   /** What the person is worth to the team, in the team's `currency`. */
   valuation: ContactValuation | null;
@@ -408,6 +436,8 @@ export type ProfileAccountStatus = "active" | "suspended" | "notFound" | (string
 export type ProfilePlatformData =
   | ProfilePlatformDataTwitter
   | ProfilePlatformDataLinkedin
+  | ProfilePlatformDataWhatsapp
+  | ProfilePlatformDataTelegram
   | ProfilePlatformDataOther;
 
 export interface ProfilePlatformDataTwitter {
@@ -483,6 +513,20 @@ export interface ProfilePlatformDataLinkedinEmployeeCountRange {
 
 export type ProfilePlatformDataLinkedinPageKind = "company" | "school" | "showcase" | (string & {});
 
+export interface ProfilePlatformDataWhatsapp {
+  _tag: "whatsapp";
+  phoneNumber?: string | null;
+  verifiedName?: string | null;
+  business?: boolean | null;
+}
+
+export interface ProfilePlatformDataTelegram {
+  _tag: "telegram";
+  verified?: boolean | null;
+  premium?: boolean | null;
+  color?: number | null;
+}
+
 /** A platform the team has enabled beyond those every team can use. Its fields are not listed here. */
 export interface ProfilePlatformDataOther {
   _tag: string;
@@ -508,6 +552,13 @@ export type RelationshipDegree =
 
 export interface RelationshipConnectionRequest {
   sentAt: string;
+}
+
+export interface ContactPhone {
+  /** In E.164. */
+  number: string;
+  /** The contact's profiles that publish this number. Empty when a team member added it. */
+  profileIds: Array<string>;
 }
 
 /** What the person is worth to the team, in the team's `currency`. */
@@ -570,7 +621,7 @@ export type PeopleSearchRequestReach = "contacts" | "network";
 export interface PeopleSearchRequest {
   /** Searches these platforms. Defaults to every available platform. With `accountLinkId`, keeps only the account links on these platforms. Repeat the key to match any of several. */
   platform?: Array<Platform>;
-  /** Searches from these account links. Each platform is searched once, from the oldest account link given on it; IDs that match no account link are ignored. Without it, each platform is searched from its oldest active account link that can search. Repeat the key to match any of several. */
+  /** Searches from these account links. Each platform is searched once, from the oldest account link given on it; IDs that match no account link are ignored. Without it, each platform is searched from its oldest active account link that can search, preferring one that can send messages. Repeat the key to match any of several. */
   accountLinkId?: Array<Cuid2>;
   /** A name or username, as typed into the platform's own people search. */
   q: string;
@@ -702,14 +753,21 @@ export type CapabilityNotSupportedDetailsCapability =
   | "message:reply"
   | "message:forward"
   | "message:answer"
+  | "message:poll"
+  | "message:event"
+  | "message:contact"
+  | "message:location"
+  | "message:callback"
   | "media:image"
   | "media:video"
   | "media:gif"
   | "media:file"
   | "media:audio"
+  | "media:sticker"
   | "thread:typing:send"
   | "thread:typing:receive"
   | "thread:seen:receive"
+  | "thread:seen:send"
   | "thread:message-requests"
   | "thread:delete:remote"
   | "directory:typeahead"
@@ -717,6 +775,7 @@ export type CapabilityNotSupportedDetailsCapability =
   | "thread:archive:mutate"
   | "thread:read:observe"
   | "thread:read:mutate"
+  | "thread:folders:import"
   | "profile:follow"
   | "profile:unfollow"
   | "profile:connect"
@@ -739,7 +798,7 @@ export interface PlatformUnavailableDetails {
   retryAfterSeconds: number | null;
 }
 
-/** Defaults to `inbox`, threads that are neither archived nor requests. `noReply` is the `inbox` threads whose latest activity is inbound. `requests` holds unarchived threads where `isRequest` is true. `archived` includes requests. `all` spans every folder. Every other filter narrows the folder. */
+/** Defaults to `inbox`, threads that are neither archived nor requests, leaving out conversations a platform keeps outside the inbox, such as chats with bots. `noReply` is `inbox` with `awaitingReply=true`. `requests` holds unarchived threads where `isRequest` is true. `archived` includes requests. `all` spans every thread, including chats kept out of the inbox. Every other filter narrows the folder, except `includeArchived`. Each folder is also a view: `inbox`, `awaitingReply` for `noReply`, `requests`, `archived` and `all`. */
 export type ThreadsListRequestFolder = "inbox" | "noReply" | "requests" | "archived" | "all";
 
 /** Sort direction by inbox order: `activity.at`, or `createdAt` for a thread with no activity. A reminder or an accepted message request moves a thread up until its next message, without changing `activity.at`. Defaults to `desc`, newest first. */
@@ -754,7 +813,9 @@ export interface ThreadsListRequest {
   platform?: Array<Platform>;
   /** Threads with these contacts. With `accountLinkId`, finds the thread between an account and a contact. Repeat the key to match any of several. */
   contactId?: Array<Cuid2>;
-  /** Defaults to `inbox`, threads that are neither archived nor requests. `noReply` is the `inbox` threads whose latest activity is inbound. `requests` holds unarchived threads where `isRequest` is true. `archived` includes requests. `all` spans every folder. Every other filter narrows the folder. */
+  /** A view's `id` from List views: lists the threads that view lists, in place of `folder`. Every other filter narrows it, except `includeArchived`. A cursor issued for a saved view is `invalidCursor` once the view changes. */
+  view?: string;
+  /** Defaults to `inbox`, threads that are neither archived nor requests, leaving out conversations a platform keeps outside the inbox, such as chats with bots. `noReply` is `inbox` with `awaitingReply=true`. `requests` holds unarchived threads where `isRequest` is true. `archived` includes requests. `all` spans every thread, including chats kept out of the inbox. Every other filter narrows the folder, except `includeArchived`. Each folder is also a view: `inbox`, `awaitingReply` for `noReply`, `requests`, `archived` and `all`. */
   folder?: ThreadsListRequestFolder;
   /** Threads whose contact has one of these tags. Repeat the key to match any of several. */
   tag?: Array<string>;
@@ -764,9 +825,15 @@ export interface ThreadsListRequest {
   assigneeId?: Array<Cuid2>;
   /** `true` keeps threads with no assignee, including through their contact. Not combinable with `assigneeId`. */
   unassigned?: boolean;
-  /** Threads these campaigns sent a message in. Campaign sends archive the thread, so pair it with `folder=archived` or `all`. Repeat the key to match any of several. */
+  /** Threads these campaigns sent a message in. Campaign sends archive the thread, so pair it with `folder=archived`, `folder=all` or `includeArchived=true`. Repeat the key to match any of several. */
   campaignId?: Array<Cuid2>;
-  /** Searches profile display names, usernames and the activity preview. Results follow `order`, not relevance. */
+  /** `true` keeps threads unread for the agent's member, as `unread` shows them. A thread marked read moments ago may still be listed, with its current `unread`. Agents only: an API token has no member and gets `memberRequired`. */
+  unread?: boolean;
+  /** `true` keeps threads whose latest activity is inbound, the inbox's No reply. */
+  awaitingReply?: boolean;
+  /** `true` adds the view's or folder's archived threads back, the inbox's With archived. A view that tests archived inside an any-of or a not-group keeps that test. No effect when the scope already includes archived threads. */
+  includeArchived?: boolean;
+  /** Searches profile display names and usernames, the contact's name and the activity preview, with typo tolerance. Lists the best 1,000 matches, following `order`, not relevance. */
   q?: string;
   /** Sort direction by inbox order: `activity.at`, or `createdAt` for a thread with no activity. A reminder or an accepted message request moves a thread up until its next message, without changing `activity.at`. Defaults to `desc`, newest first. */
   order?: ThreadsListRequestOrder;
@@ -805,7 +872,7 @@ export interface Thread {
   /** Whether the platform needs the account to accept the conversation before replying normally. `unknown` when the platform doesn't say. Independent of `isRequest`. */
   acceptanceState: ThreadAcceptanceState;
   archived: boolean;
-  /** Marked unread in Inboxapp for the team owner, whose view the API takes. A thread no one has opened yet is not unread. */
+  /** Marked unread in Inboxapp for the caller: an agent's member, or the team owner for an API token. A thread no one has opened yet is not unread. */
   unread: boolean;
   /** Capabilities the platform disables in this conversation, on top of the account link's `capabilities`. Using one fails with `threadRestricted`. */
   restrictions: Array<ThreadRestrictionsItem>;
@@ -813,6 +880,8 @@ export interface Thread {
   syncing: boolean;
   /** Whether Inboxapp sends typing indicators to the platform while someone composes in this thread. `teamDefault` follows the team's setting. */
   typingIndicators: ThreadTypingIndicators;
+  /** When Inboxapp tells the contact you've read their messages in this thread. Replying always does; `onOpen` also does when a team member opens the thread, `onReply` waits for the reply. `teamDefault` follows the team's setting. */
+  readReceipts: ThreadReadReceipts;
   lastMessage: LastMessage | null;
   activity: ThreadActivity | null;
   seen: ThreadSeen | null;
@@ -836,14 +905,21 @@ export type ThreadRestrictionsItem =
   | "message:reply"
   | "message:forward"
   | "message:answer"
+  | "message:poll"
+  | "message:event"
+  | "message:contact"
+  | "message:location"
+  | "message:callback"
   | "media:image"
   | "media:video"
   | "media:gif"
   | "media:file"
   | "media:audio"
+  | "media:sticker"
   | "thread:typing:send"
   | "thread:typing:receive"
   | "thread:seen:receive"
+  | "thread:seen:send"
   | "thread:message-requests"
   | "thread:delete:remote"
   | "directory:typeahead"
@@ -851,6 +927,7 @@ export type ThreadRestrictionsItem =
   | "thread:archive:mutate"
   | "thread:read:observe"
   | "thread:read:mutate"
+  | "thread:folders:import"
   | "profile:follow"
   | "profile:unfollow"
   | "profile:connect"
@@ -861,6 +938,9 @@ export type ThreadRestrictionsItem =
 
 /** Whether Inboxapp sends typing indicators to the platform while someone composes in this thread. `teamDefault` follows the team's setting. */
 export type ThreadTypingIndicators = "enabled" | "disabled" | "teamDefault" | (string & {});
+
+/** When Inboxapp tells the contact you've read their messages in this thread. Replying always does; `onOpen` also does when a team member opens the thread, `onReply` waits for the reply. `teamDefault` follows the team's setting. */
+export type ThreadReadReceipts = "onOpen" | "onReply" | "teamDefault" | (string & {});
 
 /** The thread's latest message. Get it for its content. */
 export interface LastMessage {
@@ -911,6 +991,96 @@ export interface ThreadDelivered {
   at: string;
 }
 
+export interface MemberRequiredDetails {
+  parameter: string;
+}
+
+/** Defaults to `inbox`, threads that are neither archived nor requests, leaving out conversations a platform keeps outside the inbox, such as chats with bots. `noReply` is `inbox` with `awaitingReply=true`. `requests` holds unarchived threads where `isRequest` is true. `archived` includes requests. `all` spans every thread, including chats kept out of the inbox. Every other filter narrows the folder, except `includeArchived`. Each folder is also a view: `inbox`, `awaitingReply` for `noReply`, `requests`, `archived` and `all`. */
+export type ThreadsSearchRequestFolder = "inbox" | "noReply" | "requests" | "archived" | "all";
+
+export type ThreadsSearchRequestExpandItem = "profile" | "contact" | "accountLink" | "assignee";
+
+export interface ThreadsSearchRequest {
+  /** Threads of these account links. Repeat the key to match any of several. */
+  accountLinkId?: Array<Cuid2>;
+  /** Repeat the key to match any of several. */
+  platform?: Array<Platform>;
+  /** Threads with these contacts. With `accountLinkId`, finds the thread between an account and a contact. Repeat the key to match any of several. */
+  contactId?: Array<Cuid2>;
+  /** A view's `id` from List views: lists the threads that view lists, in place of `folder`. Every other filter narrows it, except `includeArchived`. A cursor issued for a saved view is `invalidCursor` once the view changes. */
+  view?: string;
+  /** Defaults to `inbox`, threads that are neither archived nor requests, leaving out conversations a platform keeps outside the inbox, such as chats with bots. `noReply` is `inbox` with `awaitingReply=true`. `requests` holds unarchived threads where `isRequest` is true. `archived` includes requests. `all` spans every thread, including chats kept out of the inbox. Every other filter narrows the folder, except `includeArchived`. Each folder is also a view: `inbox`, `awaitingReply` for `noReply`, `requests`, `archived` and `all`. */
+  folder?: ThreadsSearchRequestFolder;
+  /** Threads whose contact has one of these tags. Repeat the key to match any of several. */
+  tag?: Array<string>;
+  /** Threads whose contact has one of these statuses. Repeat the key to match any of several. */
+  status?: Array<string>;
+  /** Threads whose `assigneeId`, the thread's own assignee or else its contact's, is one of these members. Repeat the key to match any of several. */
+  assigneeId?: Array<Cuid2>;
+  /** `true` keeps threads with no assignee, including through their contact. Not combinable with `assigneeId`. */
+  unassigned?: boolean;
+  /** Threads these campaigns sent a message in. Campaign sends archive the thread, so pair it with `folder=archived`, `folder=all` or `includeArchived=true`. Repeat the key to match any of several. */
+  campaignId?: Array<Cuid2>;
+  /** `true` keeps threads unread for the agent's member, as `unread` shows them. A thread marked read moments ago may still be listed, with its current `unread`. Agents only: an API token has no member and gets `memberRequired`. */
+  unread?: boolean;
+  /** `true` keeps threads whose latest activity is inbound, the inbox's No reply. */
+  awaitingReply?: boolean;
+  /** `true` adds the view's or folder's archived threads back, the inbox's With archived. A view that tests archived inside an any-of or a not-group keeps that test. No effect when the scope already includes archived threads. */
+  includeArchived?: boolean;
+  /** Matched with typo tolerance against profile display names and usernames, the contact's name and the activity preview. */
+  q: string;
+  /** How many best matches to return, from 1 to 50. Defaults to 25. */
+  limit?: number;
+  /** Related resources to embed next to their ID field, one path per key, at most 4. */
+  expand?: Array<ThreadsSearchRequestExpandItem>;
+}
+
+/** Most relevant first, in one page: `nextCursor` is always null. */
+export interface ThreadSearchPage {
+  data: Array<Thread>;
+  /** Pass it back as `cursor`, with the same filters, to read the next page. Null on the last page. */
+  nextCursor: string | null;
+}
+
+/** Defaults to `inbox`, threads that are neither archived nor requests, leaving out conversations a platform keeps outside the inbox, such as chats with bots. `noReply` is `inbox` with `awaitingReply=true`. `requests` holds unarchived threads where `isRequest` is true. `archived` includes requests. `all` spans every thread, including chats kept out of the inbox. Every other filter narrows the folder, except `includeArchived`. Each folder is also a view: `inbox`, `awaitingReply` for `noReply`, `requests`, `archived` and `all`. */
+export type ThreadsCountRequestFolder = "inbox" | "noReply" | "requests" | "archived" | "all";
+
+export interface ThreadsCountRequest {
+  /** Threads of these account links. Repeat the key to match any of several. */
+  accountLinkId?: Array<Cuid2>;
+  /** Repeat the key to match any of several. */
+  platform?: Array<Platform>;
+  /** Threads with these contacts. With `accountLinkId`, finds the thread between an account and a contact. Repeat the key to match any of several. */
+  contactId?: Array<Cuid2>;
+  /** A view's `id` from List views: lists the threads that view lists, in place of `folder`. Every other filter narrows it, except `includeArchived`. A cursor issued for a saved view is `invalidCursor` once the view changes. */
+  view?: string;
+  /** Defaults to `inbox`, threads that are neither archived nor requests, leaving out conversations a platform keeps outside the inbox, such as chats with bots. `noReply` is `inbox` with `awaitingReply=true`. `requests` holds unarchived threads where `isRequest` is true. `archived` includes requests. `all` spans every thread, including chats kept out of the inbox. Every other filter narrows the folder, except `includeArchived`. Each folder is also a view: `inbox`, `awaitingReply` for `noReply`, `requests`, `archived` and `all`. */
+  folder?: ThreadsCountRequestFolder;
+  /** Threads whose contact has one of these tags. Repeat the key to match any of several. */
+  tag?: Array<string>;
+  /** Threads whose contact has one of these statuses. Repeat the key to match any of several. */
+  status?: Array<string>;
+  /** Threads whose `assigneeId`, the thread's own assignee or else its contact's, is one of these members. Repeat the key to match any of several. */
+  assigneeId?: Array<Cuid2>;
+  /** `true` keeps threads with no assignee, including through their contact. Not combinable with `assigneeId`. */
+  unassigned?: boolean;
+  /** Threads these campaigns sent a message in. Campaign sends archive the thread, so pair it with `folder=archived`, `folder=all` or `includeArchived=true`. Repeat the key to match any of several. */
+  campaignId?: Array<Cuid2>;
+  /** `true` keeps threads unread for the agent's member, as `unread` shows them. A thread marked read moments ago may still be listed, with its current `unread`. Agents only: an API token has no member and gets `memberRequired`. */
+  unread?: boolean;
+  /** `true` keeps threads whose latest activity is inbound, the inbox's No reply. */
+  awaitingReply?: boolean;
+  /** `true` adds the view's or folder's archived threads back, the inbox's With archived. A view that tests archived inside an any-of or a not-group keeps that test. No effect when the scope already includes archived threads. */
+  includeArchived?: boolean;
+}
+
+export interface ThreadCount {
+  /** Threads the filters match, up to 10,000. */
+  count: number;
+  /** True when there are at least 10,000, so `count` stops there. */
+  capped: boolean;
+}
+
 export type ThreadsGetRequestExpandItem = "profile" | "contact" | "accountLink" | "assignee";
 
 export interface ThreadsGetRequest {
@@ -922,16 +1092,21 @@ export interface ThreadsGetRequest {
 /** Whether Inboxapp sends typing indicators to the platform while someone composes in this thread. `teamDefault` follows the team's setting. */
 export type ThreadUpdateTypingIndicators = "enabled" | "disabled" | "teamDefault";
 
+/** When Inboxapp tells the contact you've read their messages in this thread. Replying always does; `onOpen` also does when a team member opens the thread, `onReply` waits for the reply. `teamDefault` follows the team's setting. */
+export type ThreadUpdateReadReceipts = "onOpen" | "onReply" | "teamDefault";
+
 export interface ThreadsUpdateRequest {
   threadId: Cuid2;
   /** Also applied on the platform when the account link has `thread:archive:mutate`. */
   archived?: boolean;
-  /** Marks the thread read or unread for the team owner. Also applied on the platform when the account link has `thread:read:mutate`. */
+  /** Marks the thread read or unread for the caller: an agent's member, or the team owner for an API token. Also applied on the platform when the account link has `thread:read:mutate`. */
   unread?: boolean;
   /** The thread's own assignee. Null falls back to the contact's default. */
   assigneeId?: Cuid2 | null;
   /** Whether Inboxapp sends typing indicators to the platform while someone composes in this thread. `teamDefault` follows the team's setting. */
   typingIndicators?: ThreadUpdateTypingIndicators;
+  /** When Inboxapp tells the contact you've read their messages in this thread. Replying always does; `onOpen` also does when a team member opens the thread, `onReply` waits for the reply. `teamDefault` follows the team's setting. */
+  readReceipts?: ThreadUpdateReadReceipts;
 }
 
 export interface ThreadsDeleteRequest {
@@ -959,6 +1134,34 @@ export interface TypingSignal {
 export type TypingSignalStatus = "sent" | "skipped" | (string & {});
 
 export type TypingSignalReason = "rateLimited" | "disabled" | (string & {});
+
+export interface ViewsListRequest {}
+
+/** System views in the sidebar's default order, then saved views by name, in one page. */
+export interface ViewPage {
+  data: Array<View>;
+  /** Pass it back as `cursor`, with the same filters, to read the next page. Null on the last page. */
+  nextCursor: string | null;
+}
+
+/** A named set of threads. Views that depend on who is looking, such as `assigned` and unread ones, answer as the agent's member, or as the team owner for an API token, like every read. */
+export interface View {
+  /** Pass it as `view` to List, Search or Count threads. A system view's id is its key, such as `inbox`, `requests` or `awaitingReply`; a saved view's is its Inboxapp ID. */
+  id: string;
+  /** `system` views every team has; `saved` views the team's members made. */
+  kind: ViewKind;
+  name: string;
+  icon: string | null;
+  /** A saved view is `team`, listed to every member, or `private` to its creator. Null on system views. */
+  visibility: ViewVisibility | null;
+  /** The member who made a saved view, which may have left the team. Null on system views. */
+  createdBy: string | null;
+}
+
+/** `system` views every team has; `saved` views the team's members made. */
+export type ViewKind = "system" | "saved" | (string & {});
+
+export type ViewVisibility = "team" | "private" | (string & {});
 
 /** Sort direction by `createdAt`. Defaults to `desc`, newest first. */
 export type MessagesListRequestOrder = "desc" | "asc";
@@ -1005,10 +1208,14 @@ export interface Message {
   sentBy: MessageSentBy | null;
   /** The text as Inboxapp last saw it. A deleted message keeps its content. */
   content: string;
+  /** True when the text was longer than Inboxapp stores and `content` holds only its start. */
+  truncated: boolean;
   entities: MessageEntities;
   /** Media, and at most one link card, told apart by `kind`. */
   attachments: Array<MessageAttachmentsItem>;
-  /** Set when the message forwards another one, with the forwarded text as the sender's app declared it. Null otherwise. */
+  /** A poll, event, contact cards or location. Null for any other message. */
+  rich: Rich | null;
+  /** Set when the message forwards another one. `content` is the forwarded text as the sender's app declared it, on platforms that restate it inside the forward; elsewhere the message's own content is what was forwarded. Null otherwise. */
   forwarded: MessageForwarded | null;
   reactions: Array<Reaction>;
   /** When the message was last edited. Null when it hasn't been, or when the edit time wasn't recorded. Every version is in `GET /messages/{messageId}/history`. */
@@ -1084,7 +1291,7 @@ export interface MessageEntities {
   mentions: Array<MessageEntitiesMentionsItem>;
   hashtags: Array<MessageEntitiesHashtagsItem>;
   cashtags: Array<MessageEntitiesCashtagsItem>;
-  /** Rich-text formatting. A `list` or `orderedList` spans its `listItem`s. */
+  /** Rich-text formatting. A `list` or `orderedList` spans its `listItem`s, and spans may nest. */
   format: Array<MessageEntitiesFormatItem>;
 }
 
@@ -1159,10 +1366,19 @@ export interface MessageEntitiesFormatItem {
   kind: MessageEntitiesFormatItemKind;
   /** Offsets into `content` in Unicode code points, end-exclusive. A JavaScript client slices `Array.from(content)`, not `content`. */
   indices: MessageEntitiesFormatItemIndices;
+  /** A `pre` block's language, when the sender named one. */
+  language?: string;
 }
 
 export type MessageEntitiesFormatItemKind =
   | "bold"
+  | "italic"
+  | "underline"
+  | "strikethrough"
+  | "code"
+  | "pre"
+  | "spoiler"
+  | "blockquote"
   | "list"
   | "orderedList"
   | "listItem"
@@ -1190,7 +1406,7 @@ export interface AttachmentMedia {
   aspectRatio: AttachmentMediaAspectRatio | null;
   /** Video and audio only. */
   durationSeconds: AttachmentMediaDurationSeconds | null;
-  /** `ready` once `url` is usable. `pending` and `processing` while Inboxapp stores a copy: resolve the attachment again later. `failed` when Inboxapp gave up. */
+  /** `ready` once `url` is usable. `pending` and `processing` while Inboxapp stores a copy: resolve the attachment again later. `failed` when Inboxapp gave up. `notArchived` when the platform's limits keep Inboxapp from storing a copy at all. */
   status: AttachmentMediaStatus;
   /** Set exactly when `status` is `ready`. */
   url: string | null;
@@ -1224,8 +1440,14 @@ export type AttachmentMediaDurationSeconds = number | AttachmentMediaDurationSec
 
 export type AttachmentMediaDurationSecondsString = "Infinity" | "-Infinity" | "NaN" | (string & {});
 
-/** `ready` once `url` is usable. `pending` and `processing` while Inboxapp stores a copy: resolve the attachment again later. `failed` when Inboxapp gave up. */
-export type AttachmentMediaStatus = "ready" | "pending" | "processing" | "failed" | (string & {});
+/** `ready` once `url` is usable. `pending` and `processing` while Inboxapp stores a copy: resolve the attachment again later. `failed` when Inboxapp gave up. `notArchived` when the platform's limits keep Inboxapp from storing a copy at all. */
+export type AttachmentMediaStatus =
+  | "ready"
+  | "pending"
+  | "processing"
+  | "failed"
+  | "notArchived"
+  | (string & {});
 
 export interface AttachmentMediaPoster {
   url: string;
@@ -1262,8 +1484,85 @@ export interface AttachmentCardThumbnail {
   alt: string | null;
 }
 
+/** Content the platform draws as a card, told apart by `type`. The message's `content` is its plain-text preview. */
+export type Rich = RichPoll | RichEvent | RichContacts | RichLocation;
+
+export interface RichPoll {
+  type: "poll";
+  question: string;
+  options: Array<string>;
+  /** Whether a voter may pick several options. */
+  multiple: boolean;
+  /** Whether the poll stopped taking votes. */
+  closed: boolean;
+}
+
+/** The organizer's latest version of the event. */
+export interface RichEvent {
+  type: "event";
+  name: string;
+  description: string | null;
+  /** Null when the platform gave no time. */
+  startsAt: string | null;
+  /** Null when the platform gave no time. */
+  endsAt: string | null;
+  location: string | null;
+  joinLink: string | null;
+  canceled: boolean;
+}
+
+/** Shared contact cards. */
+export interface RichContacts {
+  type: "contacts";
+  contacts: Array<RichContact>;
+}
+
+/** A contact card. */
+export interface RichContact {
+  name: string;
+  organization: string | null;
+  title: string | null;
+  phones: Array<RichContactPhonesItem>;
+  emails: Array<string>;
+  addresses: Array<RichContactAddressesItem>;
+  urls: Array<string>;
+  /** `YYYY-MM-DD`, or `--MM-DD` when the card gives no year. */
+  birthday: string | null;
+}
+
+export interface RichContactPhonesItem {
+  number: string;
+  /** The sender's label, such as `mobile`. Null when it has none. */
+  label: string | null;
+}
+
+export interface RichContactAddressesItem {
+  value: string;
+  /** The sender's label, such as `mobile`. Null when it has none. */
+  label: string | null;
+}
+
+export interface RichLocation {
+  type: "location";
+  latitude: number;
+  longitude: number;
+  name: string | null;
+  address: string | null;
+  /** Whether the sender shares their position as it moves. */
+  live: boolean;
+}
+
 export interface MessageForwarded {
   content: string | null;
+  /** Where the forwarded message came from. Null on platforms that don't say. */
+  origin: MessageForwardedOrigin | null;
+}
+
+export interface MessageForwardedOrigin {
+  /** Who sent the original, as plain text: a person's name or a channel's title. Null when the platform names no one. */
+  name: string | null;
+  /** When the original was sent, where the platform says. */
+  sentAt: string | null;
 }
 
 export interface Reaction {
@@ -1308,6 +1607,8 @@ export interface ReactionAuthorUnknown {
 export type MessagePlatformData =
   | MessagePlatformDataTwitter
   | MessagePlatformDataLinkedin
+  | MessagePlatformDataWhatsapp
+  | MessagePlatformDataTelegram
   | MessagePlatformDataOther;
 
 export interface MessagePlatformDataTwitter {
@@ -1318,6 +1619,14 @@ export interface MessagePlatformDataTwitter {
 
 export interface MessagePlatformDataLinkedin {
   _tag: "linkedin";
+}
+
+export interface MessagePlatformDataWhatsapp {
+  _tag: "whatsapp";
+}
+
+export interface MessagePlatformDataTelegram {
+  _tag: "telegram";
 }
 
 /** A platform the team has enabled beyond those every team can use. Its fields are not listed here. */
@@ -1353,6 +1662,7 @@ export interface MessagesGetRequest {
 
 export interface MessagesEditRequest {
   messageId: Cuid2;
+  /** Up to the platform's `limits.characters`, or `limits.captionCharacters` when the message carries media. Longer content fails with `contentRejected`. */
   content: string;
 }
 
@@ -1369,14 +1679,21 @@ export type ThreadRestrictedDetailsCapability =
   | "message:reply"
   | "message:forward"
   | "message:answer"
+  | "message:poll"
+  | "message:event"
+  | "message:contact"
+  | "message:location"
+  | "message:callback"
   | "media:image"
   | "media:video"
   | "media:gif"
   | "media:file"
   | "media:audio"
+  | "media:sticker"
   | "thread:typing:send"
   | "thread:typing:receive"
   | "thread:seen:receive"
+  | "thread:seen:send"
   | "thread:message-requests"
   | "thread:delete:remote"
   | "directory:typeahead"
@@ -1384,6 +1701,7 @@ export type ThreadRestrictedDetailsCapability =
   | "thread:archive:mutate"
   | "thread:read:observe"
   | "thread:read:mutate"
+  | "thread:folders:import"
   | "profile:follow"
   | "profile:unfollow"
   | "profile:connect"
@@ -1406,14 +1724,21 @@ export type MutationWindowClosedDetailsCapability =
   | "message:reply"
   | "message:forward"
   | "message:answer"
+  | "message:poll"
+  | "message:event"
+  | "message:contact"
+  | "message:location"
+  | "message:callback"
   | "media:image"
   | "media:video"
   | "media:gif"
   | "media:file"
   | "media:audio"
+  | "media:sticker"
   | "thread:typing:send"
   | "thread:typing:receive"
   | "thread:seen:receive"
+  | "thread:seen:send"
   | "thread:message-requests"
   | "thread:delete:remote"
   | "directory:typeahead"
@@ -1421,6 +1746,7 @@ export type MutationWindowClosedDetailsCapability =
   | "thread:archive:mutate"
   | "thread:read:observe"
   | "thread:read:mutate"
+  | "thread:folders:import"
   | "profile:follow"
   | "profile:unfollow"
   | "profile:connect"
@@ -1498,14 +1824,85 @@ export interface SendRequestTargetProfileByUsername {
   username: string;
 }
 
+/** Sent alone in place of `content`. Content the platform can't carry fails with `contentRejected`. */
+export type SendRich = SendRichPoll | SendRichEvent | SendRichContacts | SendRichLocation;
+
+/** Needs `message:poll`. */
+export interface SendRichPoll {
+  type: "poll";
+  question: string;
+  /** At least 2, each different. */
+  options: Array<string>;
+  /** Whether a voter may pick several options. Defaults to false. */
+  multiple?: boolean;
+}
+
+/** Needs `message:event`. */
+export interface SendRichEvent {
+  type: "event";
+  name: string;
+  startsAt: string;
+  /** After `startsAt`. */
+  endsAt?: string;
+  description?: string;
+  location?: string;
+  joinLink?: string;
+}
+
+/** Needs `message:contact`. */
+export interface SendRichContacts {
+  type: "contacts";
+  /** At least 1. Each card needs a name and a phone number. */
+  contacts: Array<SendContact>;
+}
+
+export interface SendContact {
+  name: string;
+  phones: Array<SendContactPhonesItem>;
+  emails?: Array<string>;
+  organization?: string;
+  title?: string;
+  addresses?: Array<SendContactAddressesItem>;
+  urls?: Array<string>;
+  /** `YYYY-MM-DD`, or `--MM-DD` without a year. */
+  birthday?: string;
+}
+
+export interface SendContactPhonesItem {
+  number: string;
+  label?: string;
+}
+
+export interface SendContactAddressesItem {
+  value: string;
+  label?: string;
+}
+
+/** Needs `message:location`. */
+export interface SendRichLocation {
+  type: "location";
+  latitude: number;
+  longitude: number;
+  name?: string;
+  address?: string;
+}
+
+/** How a first message opens its conversation, such as `inmail` or `salesNavigator` on LinkedIn. Sent that way or refused, never another way: a route the platform doesn't have fails with `contentRejected`, and one this account link can't take to the recipient now fails with `recipientUnavailable`. Without it the message takes the platform's preferred route. Refused on a conversation that already exists. Needs the Advanced API add-on. */
+export type SendRequestRoute = "inmail" | "sponsored" | "offer" | "sms" | "bot" | "salesNavigator";
+
 export interface MessagesSendRequest {
   /** Makes retries safe: a replay with the same key and body returns the original message. Scoped to the team. */
   idempotencyKey?: string;
   target: SendRequestTarget;
   /** Up to the platform's `limits.characters`. Longer content fails with `contentRejected`. */
-  content: string;
+  content?: string;
+  rich?: SendRich;
   /** A message in the thread this send lands in, to reply to. */
   replyToMessageId?: Cuid2;
+  /** How a first message opens its conversation, such as `inmail` or `salesNavigator` on LinkedIn. Sent that way or refused, never another way: a route the platform doesn't have fails with `contentRejected`, and one this account link can't take to the recipient now fails with `recipientUnavailable`. Without it the message takes the platform's preferred route. Refused on a conversation that already exists. Needs the Advanced API add-on. */
+  route?: SendRequestRoute;
+  /** Heads a first message on a route that takes a subject, such as `salesNavigator`, which requires one, or `inmail`, where it is optional when LinkedIn offers one. Without it, a route that requires one fails with `contentRejected`. Ignored on replies. */
+  subject?: string;
 }
 
 export interface SendInProgressDetails {

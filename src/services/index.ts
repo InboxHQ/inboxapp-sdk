@@ -13,6 +13,7 @@ import { Statuses } from "./statuses.ts";
 import { Tags } from "./tags.ts";
 import { Team } from "./team.ts";
 import { Threads } from "./threads.ts";
+import { Views } from "./views.ts";
 
 export class Services {
   /** The messaging platforms available to the team, with what each one supports. */
@@ -27,6 +28,8 @@ export class Services {
   readonly people: People;
   /** Conversations between one of the team's account links and one profile. */
   readonly threads: Threads;
+  /** The named sets of threads the team works from: system views and the views its members saved. */
+  readonly views: Views;
   /** Messages in a thread, and sending, editing, unsending and reacting to them on the platform. */
   readonly messages: Messages;
   /** How an account link stands with a profile on the platform, and requests that change it. */
@@ -47,6 +50,7 @@ export class Services {
     this.contacts = new Contacts(transport);
     this.people = new People(transport);
     this.threads = new Threads(transport);
+    this.views = new Views(transport);
     this.messages = new Messages(transport);
     this.relationships = new Relationships(transport);
     this.tags = new Tags(transport);

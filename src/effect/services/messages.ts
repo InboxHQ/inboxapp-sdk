@@ -185,8 +185,11 @@ export const SendRequest = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
     idempotencyKey: S.optional(S.String).pipe(T.Header("Idempotency-Key")),
     target: Model.SendRequestTarget,
-    content: S.String,
+    content: S.optional(S.String),
+    rich: S.optional(Model.SendRich),
     replyToMessageId: S.optional(Model.Cuid2),
+    route: S.optional(Model.SendRequestRoute),
+    subject: S.optional(S.String),
   }).pipe(T.Http({ method: "POST", uri: "/messages", code: 200 })),
 ).annotate({ identifier: "MessagesSendRequest" }) as any as S.Schema<M.MessagesSendRequest>;
 

@@ -15,12 +15,16 @@ export const ListRequest = /*@__PURE__*/ S.suspend(() =>
     accountLinkId: S.optional(S.Array(Model.Cuid2)).pipe(T.Query("accountLinkId")),
     platform: S.optional(S.Array(Model.Platform)).pipe(T.Query("platform")),
     contactId: S.optional(S.Array(Model.Cuid2)).pipe(T.Query("contactId")),
+    view: S.optional(S.String).pipe(T.Query("view")),
     folder: S.optional(Model.ThreadsListRequestFolder).pipe(T.Query("folder")),
     tag: S.optional(S.Array(S.String)).pipe(T.Query("tag")),
     status: S.optional(S.Array(S.String)).pipe(T.Query("status")),
     assigneeId: S.optional(S.Array(Model.Cuid2)).pipe(T.Query("assigneeId")),
     unassigned: S.optional(S.Boolean).pipe(T.Query("unassigned")),
     campaignId: S.optional(S.Array(Model.Cuid2)).pipe(T.Query("campaignId")),
+    unread: S.optional(S.Boolean).pipe(T.Query("unread")),
+    awaitingReply: S.optional(S.Boolean).pipe(T.Query("awaitingReply")),
+    includeArchived: S.optional(S.Boolean).pipe(T.Query("includeArchived")),
     q: S.optional(S.String).pipe(T.Query("q")),
     order: S.optional(Model.ThreadsListRequestOrder).pipe(T.Query("order")),
     expand: S.optional(S.Array(Model.ThreadsListRequestExpandItem)).pipe(T.Query("expand")),
@@ -29,7 +33,13 @@ export const ListRequest = /*@__PURE__*/ S.suspend(() =>
   }).pipe(T.Http({ method: "GET", uri: "/threads", code: 200 })),
 ).annotate({ identifier: "ThreadsListRequest" }) as any as S.Schema<M.ThreadsListRequest>;
 
-export type ListError = E.InvalidCursor | E.PlatformNotAvailable | InboxappOpError;
+export type ListError =
+  | E.InvalidCursor
+  | E.MemberRequired
+  | E.PlatformNotAvailable
+  | E.ViewNotFound
+  | E.SearchUnavailable
+  | InboxappOpError;
 /**
  * List threads
  *
@@ -45,7 +55,13 @@ export const list: API.PaginatedOperationMethod<
   id: "threads.list",
   input: ListRequest,
   output: Model.ThreadPage,
-  errors: [E.InvalidCursor, E.PlatformNotAvailable],
+  errors: [
+    E.InvalidCursor,
+    E.MemberRequired,
+    E.PlatformNotAvailable,
+    E.ViewNotFound,
+    E.SearchUnavailable,
+  ],
   protocol: InboxappProtocol,
   retry: Retry.Retry,
   pagination: {
@@ -55,6 +71,97 @@ export const list: API.PaginatedOperationMethod<
     items: "data",
     pageSize: "limit",
   },
+}));
+
+export type SearchRequest = M.ThreadsSearchRequest;
+export const SearchRequest = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    accountLinkId: S.optional(S.Array(Model.Cuid2)).pipe(T.Query("accountLinkId")),
+    platform: S.optional(S.Array(Model.Platform)).pipe(T.Query("platform")),
+    contactId: S.optional(S.Array(Model.Cuid2)).pipe(T.Query("contactId")),
+    view: S.optional(S.String).pipe(T.Query("view")),
+    folder: S.optional(Model.ThreadsSearchRequestFolder).pipe(T.Query("folder")),
+    tag: S.optional(S.Array(S.String)).pipe(T.Query("tag")),
+    status: S.optional(S.Array(S.String)).pipe(T.Query("status")),
+    assigneeId: S.optional(S.Array(Model.Cuid2)).pipe(T.Query("assigneeId")),
+    unassigned: S.optional(S.Boolean).pipe(T.Query("unassigned")),
+    campaignId: S.optional(S.Array(Model.Cuid2)).pipe(T.Query("campaignId")),
+    unread: S.optional(S.Boolean).pipe(T.Query("unread")),
+    awaitingReply: S.optional(S.Boolean).pipe(T.Query("awaitingReply")),
+    includeArchived: S.optional(S.Boolean).pipe(T.Query("includeArchived")),
+    q: S.String.pipe(T.Query("q")),
+    limit: S.optional(S.Number).pipe(T.Query("limit")),
+    expand: S.optional(S.Array(Model.ThreadsSearchRequestExpandItem)).pipe(T.Query("expand")),
+  }).pipe(T.Http({ method: "GET", uri: "/threads/search", code: 200 })),
+).annotate({ identifier: "ThreadsSearchRequest" }) as any as S.Schema<M.ThreadsSearchRequest>;
+
+export type SearchError =
+  | E.MemberRequired
+  | E.PlatformNotAvailable
+  | E.ViewNotFound
+  | E.SearchUnavailable
+  | InboxappOpError;
+/**
+ * Search threads
+ *
+ * The threads that best match `q`, most relevant first, in one page. Use it to find a conversation by a person's name or username; to page through the best 1,000 matches in inbox order, use `q` on List threads.
+ */
+export const search: API.OperationMethod<
+  M.ThreadsSearchRequest,
+  M.ThreadSearchPage,
+  SearchError,
+  InboxappOpContext
+> = /*@__PURE__*/ API.make(() => ({
+  id: "threads.search",
+  input: SearchRequest,
+  output: Model.ThreadSearchPage,
+  errors: [E.MemberRequired, E.PlatformNotAvailable, E.ViewNotFound, E.SearchUnavailable],
+  protocol: InboxappProtocol,
+  retry: Retry.Retry,
+}));
+
+export type CountRequest = M.ThreadsCountRequest;
+export const CountRequest = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    accountLinkId: S.optional(S.Array(Model.Cuid2)).pipe(T.Query("accountLinkId")),
+    platform: S.optional(S.Array(Model.Platform)).pipe(T.Query("platform")),
+    contactId: S.optional(S.Array(Model.Cuid2)).pipe(T.Query("contactId")),
+    view: S.optional(S.String).pipe(T.Query("view")),
+    folder: S.optional(Model.ThreadsCountRequestFolder).pipe(T.Query("folder")),
+    tag: S.optional(S.Array(S.String)).pipe(T.Query("tag")),
+    status: S.optional(S.Array(S.String)).pipe(T.Query("status")),
+    assigneeId: S.optional(S.Array(Model.Cuid2)).pipe(T.Query("assigneeId")),
+    unassigned: S.optional(S.Boolean).pipe(T.Query("unassigned")),
+    campaignId: S.optional(S.Array(Model.Cuid2)).pipe(T.Query("campaignId")),
+    unread: S.optional(S.Boolean).pipe(T.Query("unread")),
+    awaitingReply: S.optional(S.Boolean).pipe(T.Query("awaitingReply")),
+    includeArchived: S.optional(S.Boolean).pipe(T.Query("includeArchived")),
+  }).pipe(T.Http({ method: "GET", uri: "/threads/count", code: 200 })),
+).annotate({ identifier: "ThreadsCountRequest" }) as any as S.Schema<M.ThreadsCountRequest>;
+
+export type CountError =
+  | E.MemberRequired
+  | E.PlatformNotAvailable
+  | E.ViewNotFound
+  | E.SearchUnavailable
+  | InboxappOpError;
+/**
+ * Count threads
+ *
+ * How many threads the filters match, as the search index counts them; a thread changed in the last moments may be counted as it was. Use it to size a folder before paging through it.
+ */
+export const count: API.OperationMethod<
+  M.ThreadsCountRequest,
+  M.ThreadCount,
+  CountError,
+  InboxappOpContext
+> = /*@__PURE__*/ API.make(() => ({
+  id: "threads.count",
+  input: CountRequest,
+  output: Model.ThreadCount,
+  errors: [E.MemberRequired, E.PlatformNotAvailable, E.ViewNotFound, E.SearchUnavailable],
+  protocol: InboxappProtocol,
+  retry: Retry.Retry,
 }));
 
 export type GetRequest = M.ThreadsGetRequest;
@@ -85,6 +192,7 @@ export const UpdateRequest = /*@__PURE__*/ S.suspend(() =>
     unread: S.optional(S.Boolean),
     assigneeId: S.optional(S.NullOr(Model.Cuid2)),
     typingIndicators: S.optional(Model.ThreadUpdateTypingIndicators),
+    readReceipts: S.optional(Model.ThreadUpdateReadReceipts),
   }).pipe(T.Http({ method: "PATCH", uri: "/threads/{threadId}", code: 200 })),
 ).annotate({ identifier: "ThreadsUpdateRequest" }) as any as S.Schema<M.ThreadsUpdateRequest>;
 

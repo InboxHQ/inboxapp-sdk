@@ -134,12 +134,16 @@ export const threadsList = {
     accountLinkId: { name: "accountLinkId", style: "form" },
     platform: { name: "platform", style: "form" },
     contactId: { name: "contactId", style: "form" },
+    view: { name: "view", style: "form" },
     folder: { name: "folder", style: "form" },
     tag: { name: "tag", style: "form" },
     status: { name: "status", style: "form" },
     assigneeId: { name: "assigneeId", style: "form" },
     unassigned: { name: "unassigned", style: "form" },
     campaignId: { name: "campaignId", style: "form" },
+    unread: { name: "unread", style: "form" },
+    awaitingReply: { name: "awaitingReply", style: "form" },
+    includeArchived: { name: "includeArchived", style: "form" },
     q: { name: "q", style: "form" },
     order: { name: "order", style: "form" },
     expand: { name: "expand", style: "form" },
@@ -152,6 +156,51 @@ export const threadsList = {
     outputToken: "nextCursor",
     items: "data",
     pageSize: "limit",
+  },
+} as const satisfies OperationDescriptor;
+
+export const threadsSearch = {
+  id: "threads.search",
+  method: "GET",
+  path: "/threads/search",
+  query: {
+    accountLinkId: { name: "accountLinkId", style: "form" },
+    platform: { name: "platform", style: "form" },
+    contactId: { name: "contactId", style: "form" },
+    view: { name: "view", style: "form" },
+    folder: { name: "folder", style: "form" },
+    tag: { name: "tag", style: "form" },
+    status: { name: "status", style: "form" },
+    assigneeId: { name: "assigneeId", style: "form" },
+    unassigned: { name: "unassigned", style: "form" },
+    campaignId: { name: "campaignId", style: "form" },
+    unread: { name: "unread", style: "form" },
+    awaitingReply: { name: "awaitingReply", style: "form" },
+    includeArchived: { name: "includeArchived", style: "form" },
+    q: { name: "q", style: "form" },
+    limit: { name: "limit", style: "form" },
+    expand: { name: "expand", style: "form" },
+  },
+} as const satisfies OperationDescriptor;
+
+export const threadsCount = {
+  id: "threads.count",
+  method: "GET",
+  path: "/threads/count",
+  query: {
+    accountLinkId: { name: "accountLinkId", style: "form" },
+    platform: { name: "platform", style: "form" },
+    contactId: { name: "contactId", style: "form" },
+    view: { name: "view", style: "form" },
+    folder: { name: "folder", style: "form" },
+    tag: { name: "tag", style: "form" },
+    status: { name: "status", style: "form" },
+    assigneeId: { name: "assigneeId", style: "form" },
+    unassigned: { name: "unassigned", style: "form" },
+    campaignId: { name: "campaignId", style: "form" },
+    unread: { name: "unread", style: "form" },
+    awaitingReply: { name: "awaitingReply", style: "form" },
+    includeArchived: { name: "includeArchived", style: "form" },
   },
 } as const satisfies OperationDescriptor;
 
@@ -183,6 +232,12 @@ export const threadsTyping = {
   method: "POST",
   path: "/threads/{threadId}/typing",
   labels: ["threadId"],
+} as const satisfies OperationDescriptor;
+
+export const viewsList = {
+  id: "views.list",
+  method: "GET",
+  path: "/views",
 } as const satisfies OperationDescriptor;
 
 export const messagesList = {

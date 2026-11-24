@@ -12,6 +12,8 @@ export * as contacts from "./contacts.ts";
 export * as people from "./people.ts";
 /** Conversations between one of the team's account links and one profile. */
 export * as threads from "./threads.ts";
+/** The named sets of threads the team works from: system views and the views its members saved. */
+export * as views from "./views.ts";
 /** Messages in a thread, and sending, editing, unsending and reacting to them on the platform. */
 export * as messages from "./messages.ts";
 /** How an account link stands with a profile on the platform, and requests that change it. */

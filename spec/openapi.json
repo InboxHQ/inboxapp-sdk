@@ -3,7 +3,7 @@
   "info": {
     "title": "Inboxapp API",
     "version": "2.0.0",
-    "description": "The Inboxapp API gives you access to your team's conversations and the CRM state around them. Every platform uses the same resources, so your code asks what an account can do instead of which platform it is on.\n\n## The data model\n\n```txt\nTeam\n├── Members                people on your team\n├── Account links          your accounts on each platform\n│   └── Threads            one conversation with one profile\n│       └── Messages\n├── Contacts               your record of a person\n│   └── Profiles           their account on each platform\n├── Tags                   labels on contacts\n└── Statuses               pipeline stages of contacts\n```\n\n| Resource | What it is |\n| --- | --- |\n| **Platform** | A messaging platform available to your team, with what it supports |\n| **Account link** | One of your accounts on a platform. Messages are sent from one |\n| **Profile** | One person's account on one platform |\n| **Contact** | Your team's record of a person. Groups one or more of their profiles |\n| **Thread** | A conversation between one account link and one profile |\n| **Message** | A message in a thread, which you can send, edit, unsend and react to |\n| **Tag** | A label on a contact. A contact can have several |\n| **Status** | A pipeline stage. A contact has at most one |\n| **Member** | A person on your team, who can be assigned threads and contacts |\n\n## Authentication\n\nSend your API token in the `Authorization` header: `Authorization: Bearer <token>`. The token decides the team, so no path or parameter names one.\n\n## Member view\n\nSome state belongs to one member rather than the team: each member has their own read status for a thread. The API isn't a member, so it takes the team owner's view. A thread's `unread` is whether the owner has it unread, and setting it marks the thread read or unread for the owner.\n\n## Profiles and contacts\n\nA **profile** holds what the platform says about a person: `username`, `displayName`, `bio`, follower counts. A **contact** holds what your team says about them: `statusId`, `tagIds`, `notes`, `valuation`, `assigneeId`. A contact groups one or more profiles.\n\nA thread is always with one profile, and its `contactId` points to the contact that profile belongs to.\n\n```json\n{\n  \"id\": \"nq2r8v5ycx1t7m4hj6kd3wzb\",\n  \"profiles\": [\n    {\n      \"id\": \"n7kxqm5d9iu2sgdf6jbw4h36\",\n      \"platform\": \"twitter\",\n      \"platformId\": \"1876543210987654321\",\n      \"username\": \"sarahchen\",\n      \"handle\": \"@sarahchen\",\n      \"displayName\": \"Sarah Chen\"\n    }\n  ],\n  \"statusId\": \"r3km7xj9wq5p2bvnhfdteoly\",\n  \"tagIds\": [\"t9wq5p2bvnhfdteolyr3km7x\"],\n  \"notes\": \"Asked for a demo of the reporting API.\",\n  \"valuation\": 12000,\n  \"assigneeId\": null\n}\n```\n\nReads never create a contact. Someone your team has never talked to or imported has none: message them by sending to a `profile` target.\n\n## IDs\n\n| Field | What it is | Use it for |\n| --- | --- | --- |\n| `id`, every `…Id` | An Inboxapp ID | Paths and references. Paths only take Inboxapp IDs |\n| `platformId` | The ID the platform gives the object: its user, conversation or message | Matching against your own data |\n\nA `platformId` always comes with a `platform`, and means nothing without it. To find a resource by its platform identity, filter its collection:\n\n```txt\nGET /contacts?platform=twitter&platformId=1876543210987654321\n```\n\nNo match is an empty `data` array, never a `404`.\n\n## Platforms and capabilities\n\nPlatforms differ: one lets you edit a message, another doesn't. The API expresses that as **capabilities** instead of per-platform endpoints. `GET /platforms` lists the platforms available to your team, with their capabilities and limits.\n\n```txt\nPlatform capabilities              the most any account on the platform can do\n  └── Account link capabilities    narrowed for this account\n        └── Thread restrictions    disabled in this conversation\n```\n\nCheck both before you call:\n\n```typescript\nfunction canEdit(accountLink: AccountLink, thread: Thread): boolean {\n  return (\n    accountLink.capabilities.includes(\"message:edit\") &&\n    !thread.restrictions.includes(\"message:edit\")\n  );\n}\n```\n\n| Failure | Meaning |\n| --- | --- |\n| `422 capabilityNotSupported` | The account link can't do this |\n| `422 threadRestricted` | The platform disabled it in this conversation |\n| `422 mutationWindowClosed` | The platform's time window for it has passed |\n| `403 platformNotAvailable` | The resource is on a platform your team can't use |\n\nNew platforms may be added within v2, so treat `platform` as an open string. Code that checks capabilities keeps working when they are. See [Platforms and capabilities](https://docs.inboxapp.com/v2/platforms) for what each platform supports.\n\n## Platform data\n\nFields every platform has are top-level. Fields only one platform has are in `platformData`, tagged by `_tag`:\n\n```json\n{\n  \"platformData\": { \"_tag\": \"twitter\", \"encrypted\": true }\n}\n```\n\nIgnore tags you don't know.\n\n## Responses\n\nEvery documented field is present: a value that doesn't apply is `null`. Timestamps are ISO 8601 in UTC. Within v2, fields, enum values and error codes may be added, so ignore unknown fields and handle unknown enum values.\n\n## Pagination\n\nCollections return `{ \"data\": [...], \"nextCursor\": \"...\" }`. Pass `nextCursor` back as `cursor`, with the same filters, to read the next page. It is `null` on the last page. `limit` defaults to 50, up to 100. See [Pagination](https://docs.inboxapp.com/v2/reference/pagination).\n\n## Query parameters\n\nTo pass several values, repeat the key:\n\n```txt\n?accountLinkId=a&accountLinkId=b\n```\n\nBrackets (`ids[]=…`) and comma-separated values aren't accepted. See [Query parameters](https://docs.inboxapp.com/v2/reference/query-parameters).\n\n## Expansion\n\nReferences are IDs by default. Use `expand` to embed the related resource next to its ID field, `contact` beside `contactId`, at most 4 per request:\n\n```txt\nGET /threads?expand=contact&expand=profile\n```\n\n## Updates\n\nIn `PATCH` bodies, omitted fields are left unchanged, and `null` clears a nullable field.\n\n## Errors\n\nEvery error has the same body:\n\n```json\n{\n  \"code\": \"capabilityNotSupported\",\n  \"message\": \"This account can't perform this operation.\",\n  \"details\": { \"capability\": \"message:edit\" },\n  \"requestId\": \"…\"\n}\n```\n\nBranch on `code`, the contract. `message` can be shown to a person and may change. `details` is `null` or the object documented for that code. Share `requestId`, also in the `X-Request-Id` header, when you contact support. See [Error codes](https://docs.inboxapp.com/v2/reference/errors).\n\n## Sending safely\n\n`POST /messages` takes an optional `Idempotency-Key` header. Retrying with the same key never sends twice: a replay returns the original result. Without a key, a retry can send twice.\n\n## Rate limits\n\nEach team can make 300 requests per minute, 10,000 per hour and 100,000 per day. Every response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset`. Past a limit, requests fail with `429 rateLimited` and a `Retry-After` header. See [Rate limits](https://docs.inboxapp.com/v2/reference/rate-limits).",
+    "description": "The Inboxapp API gives you access to your team's conversations and the CRM state around them. Every platform uses the same resources, so your code asks what an account can do instead of which platform it is on.\n\n## The data model\n\n```txt\nTeam\n├── Members                people on your team\n├── Account links          your accounts on each platform\n│   └── Threads            one conversation with one profile\n│       └── Messages\n├── Contacts               your record of a person\n│   └── Profiles           their account on each platform\n├── Tags                   labels on contacts\n└── Statuses               pipeline stages of contacts\n```\n\n| Resource | What it is |\n| --- | --- |\n| **Platform** | A messaging platform available to your team, with what it supports |\n| **Account link** | One of your accounts on a platform. Messages are sent from one |\n| **Profile** | One person's account on one platform |\n| **Contact** | Your team's record of a person. Groups one or more of their profiles |\n| **Thread** | A conversation between one account link and one profile |\n| **Message** | A message in a thread, which you can send, edit, unsend and react to |\n| **Tag** | A label on a contact. A contact can have several |\n| **Status** | A pipeline stage. A contact has at most one |\n| **Member** | A person on your team, who can be assigned threads and contacts |\n\n## Authentication\n\nSend your API token in the `Authorization` header: `Authorization: Bearer <token>`. The token decides the team, so no path or parameter names one.\n\n## Member view\n\nSome state belongs to one member rather than the team: each member has their own read status for a thread. An API token isn't a member, so it takes the team owner's view. A thread's `unread` is whether the owner has it unread, and setting it marks the thread read or unread for the owner. Filtering by `unread` needs a member, so an API token gets `403 memberRequired`. An agent, such as an MCP client, takes its member's view instead.\n\n## Profiles and contacts\n\nA **profile** holds what the platform says about a person: `username`, `displayName`, `bio`, follower counts. A **contact** holds what your team says about them: `statusId`, `tagIds`, `notes`, `valuation`, `assigneeId`. A contact groups one or more profiles.\n\nA thread is always with one profile, and its `contactId` points to the contact that profile belongs to.\n\n```json\n{\n  \"id\": \"nq2r8v5ycx1t7m4hj6kd3wzb\",\n  \"profiles\": [\n    {\n      \"id\": \"n7kxqm5d9iu2sgdf6jbw4h36\",\n      \"platform\": \"twitter\",\n      \"platformId\": \"1876543210987654321\",\n      \"username\": \"sarahchen\",\n      \"handle\": \"@sarahchen\",\n      \"displayName\": \"Sarah Chen\"\n    }\n  ],\n  \"statusId\": \"r3km7xj9wq5p2bvnhfdteoly\",\n  \"tagIds\": [\"t9wq5p2bvnhfdteolyr3km7x\"],\n  \"notes\": \"Asked for a demo of the reporting API.\",\n  \"valuation\": 12000,\n  \"assigneeId\": null\n}\n```\n\nReads never create a contact. Someone your team has never talked to or imported has none: message them by sending to a `profile` target.\n\n## IDs\n\n| Field | What it is | Use it for |\n| --- | --- | --- |\n| `id`, every `…Id` | An Inboxapp ID | Paths and references. Paths only take Inboxapp IDs |\n| `platformId` | The ID the platform gives the object: its user, conversation or message | Matching against your own data |\n\nA `platformId` always comes with a `platform`, and means nothing without it. To find a resource by its platform identity, filter its collection:\n\n```txt\nGET /contacts?platform=twitter&platformId=1876543210987654321\n```\n\nNo match is an empty `data` array, never a `404`.\n\n## Platforms and capabilities\n\nPlatforms differ: one lets you edit a message, another doesn't. The API expresses that as **capabilities** instead of per-platform endpoints. `GET /platforms` lists the platforms available to your team, with their capabilities and limits.\n\n```txt\nPlatform capabilities              the most any account on the platform can do\n  └── Account link capabilities    narrowed for this account\n        └── Thread restrictions    disabled in this conversation\n```\n\nCheck both before you call:\n\n```typescript\nfunction canEdit(accountLink: AccountLink, thread: Thread): boolean {\n  return (\n    accountLink.capabilities.includes(\"message:edit\") &&\n    !thread.restrictions.includes(\"message:edit\")\n  );\n}\n```\n\n| Failure | Meaning |\n| --- | --- |\n| `422 capabilityNotSupported` | The account link can't do this |\n| `422 threadRestricted` | The platform disabled it in this conversation |\n| `422 mutationWindowClosed` | The platform's time window for it has passed |\n| `403 platformNotAvailable` | The resource is on a platform your team can't use |\n\nNew platforms may be added within v2, so treat `platform` as an open string. Code that checks capabilities keeps working when they are. See [Platforms and capabilities](https://docs.inboxapp.com/v2/platforms) for what each platform supports.\n\n## Platform data\n\nFields every platform has are top-level. Fields only one platform has are in `platformData`, tagged by `_tag`:\n\n```json\n{\n  \"platformData\": { \"_tag\": \"twitter\", \"encrypted\": true }\n}\n```\n\nIgnore tags you don't know.\n\n## Responses\n\nEvery documented field is present: a value that doesn't apply is `null`. Timestamps are ISO 8601 in UTC. Within v2, fields, enum values and error codes may be added, so ignore unknown fields and handle unknown enum values.\n\n## Pagination\n\nCollections return `{ \"data\": [...], \"nextCursor\": \"...\" }`. Pass `nextCursor` back as `cursor`, with the same filters, to read the next page. It is `null` on the last page. `limit` defaults to 50, up to 100. See [Pagination](https://docs.inboxapp.com/v2/reference/pagination).\n\n## Query parameters\n\nTo pass several values, repeat the key:\n\n```txt\n?accountLinkId=a&accountLinkId=b\n```\n\nBrackets (`ids[]=…`) and comma-separated values aren't accepted. See [Query parameters](https://docs.inboxapp.com/v2/reference/query-parameters).\n\n## Expansion\n\nReferences are IDs by default. Use `expand` to embed the related resource next to its ID field, `contact` beside `contactId`, at most 4 per request:\n\n```txt\nGET /threads?expand=contact&expand=profile\n```\n\n## Updates\n\nIn `PATCH` bodies, omitted fields are left unchanged, and `null` clears a nullable field.\n\n## Errors\n\nEvery error has the same body:\n\n```json\n{\n  \"code\": \"capabilityNotSupported\",\n  \"message\": \"This account can't perform this operation.\",\n  \"details\": { \"capability\": \"message:edit\" },\n  \"requestId\": \"…\"\n}\n```\n\nBranch on `code`, the contract. `message` can be shown to a person and may change. `details` is `null` or the object documented for that code. Share `requestId`, also in the `X-Request-Id` header, when you contact support. See [Error codes](https://docs.inboxapp.com/v2/reference/errors).\n\n## Sending safely\n\n`POST /messages` takes an optional `Idempotency-Key` header. Retrying with the same key never sends twice: a replay returns the original result. Without a key, a retry can send twice.\n\n## Rate limits\n\nEach team can make 300 requests per minute, 10,000 per hour and 100,000 per day. Every response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset`. Past a limit, requests fail with `429 rateLimited` and a `Retry-After` header. See [Rate limits](https://docs.inboxapp.com/v2/reference/rate-limits).",
     "summary": "Read and act on your team's conversations across messaging platforms."
   },
   "paths": {
@@ -1184,7 +1184,7 @@
               "items": {
                 "$ref": "#/components/schemas/Cuid2"
               },
-              "description": "Searches from these account links. Each platform is searched once, from the oldest account link given on it; IDs that match no account link are ignored. Without it, each platform is searched from its oldest active account link that can search. Repeat the key to match any of several."
+              "description": "Searches from these account links. Each platform is searched once, from the oldest account link given on it; IDs that match no account link are ignored. Without it, each platform is searched from its oldest active account link that can search, preferring one that can send messages. Repeat the key to match any of several."
             },
             "required": false
           },
@@ -1406,12 +1406,22 @@
             "required": false
           },
           {
+            "name": "view",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "A view's `id` from List views: lists the threads that view lists, in place of `folder`. Every other filter narrows it, except `includeArchived`. A cursor issued for a saved view is `invalidCursor` once the view changes."
+            },
+            "required": false
+          },
+          {
             "name": "folder",
             "in": "query",
             "schema": {
               "type": "string",
               "enum": ["inbox", "noReply", "requests", "archived", "all"],
-              "description": "Defaults to `inbox`, threads that are neither archived nor requests. `noReply` is the `inbox` threads whose latest activity is inbound. `requests` holds unarchived threads where `isRequest` is true. `archived` includes requests. `all` spans every folder. Every other filter narrows the folder."
+              "description": "Defaults to `inbox`, threads that are neither archived nor requests, leaving out conversations a platform keeps outside the inbox, such as chats with bots. `noReply` is `inbox` with `awaitingReply=true`. `requests` holds unarchived threads where `isRequest` is true. `archived` includes requests. `all` spans every thread, including chats kept out of the inbox. Every other filter narrows the folder, except `includeArchived`. Each folder is also a view: `inbox`, `awaitingReply` for `noReply`, `requests`, `archived` and `all`."
             },
             "required": false
           },
@@ -1470,7 +1480,34 @@
               "items": {
                 "$ref": "#/components/schemas/Cuid2"
               },
-              "description": "Threads these campaigns sent a message in. Campaign sends archive the thread, so pair it with `folder=archived` or `all`. Repeat the key to match any of several."
+              "description": "Threads these campaigns sent a message in. Campaign sends archive the thread, so pair it with `folder=archived`, `folder=all` or `includeArchived=true`. Repeat the key to match any of several."
+            },
+            "required": false
+          },
+          {
+            "name": "unread",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "`true` keeps threads unread for the agent's member, as `unread` shows them. A thread marked read moments ago may still be listed, with its current `unread`. Agents only: an API token has no member and gets `memberRequired`."
+            },
+            "required": false
+          },
+          {
+            "name": "awaitingReply",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "`true` keeps threads whose latest activity is inbound, the inbox's No reply."
+            },
+            "required": false
+          },
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "`true` adds the view's or folder's archived threads back, the inbox's With archived. A view that tests archived inside an any-of or a not-group keeps that test. No effect when the scope already includes archived threads."
             },
             "required": false
           },
@@ -1480,7 +1517,7 @@
             "schema": {
               "type": "string",
               "minLength": 1,
-              "description": "Searches profile display names, usernames and the activity preview. Results follow `order`, not relevance."
+              "description": "Searches profile display names and usernames, the contact's name and the activity preview, with typo tolerance. Lists the best 1,000 matches, following `order`, not relevance."
             },
             "required": false
           },
@@ -1577,7 +1614,24 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlatformNotAvailable"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/MemberRequired"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PlatformNotAvailable"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewNotFound"
                 }
               }
             }
@@ -1601,10 +1655,553 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchUnavailable"
+                }
+              }
+            }
           }
         },
         "description": "Threads in inbox order, filtered by folder and by contact CRM state.",
         "summary": "List threads",
+        "x-mcp-hints": {
+          "openWorldHint": true
+        }
+      }
+    },
+    "/threads/search": {
+      "get": {
+        "tags": ["Threads"],
+        "operationId": "threads.search",
+        "parameters": [
+          {
+            "name": "accountLinkId",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Cuid2"
+              },
+              "description": "Threads of these account links. Repeat the key to match any of several."
+            },
+            "required": false
+          },
+          {
+            "name": "platform",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Platform"
+              },
+              "description": "Repeat the key to match any of several."
+            },
+            "required": false
+          },
+          {
+            "name": "contactId",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Cuid2"
+              },
+              "description": "Threads with these contacts. With `accountLinkId`, finds the thread between an account and a contact. Repeat the key to match any of several."
+            },
+            "required": false
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "A view's `id` from List views: lists the threads that view lists, in place of `folder`. Every other filter narrows it, except `includeArchived`. A cursor issued for a saved view is `invalidCursor` once the view changes."
+            },
+            "required": false
+          },
+          {
+            "name": "folder",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["inbox", "noReply", "requests", "archived", "all"],
+              "description": "Defaults to `inbox`, threads that are neither archived nor requests, leaving out conversations a platform keeps outside the inbox, such as chats with bots. `noReply` is `inbox` with `awaitingReply=true`. `requests` holds unarchived threads where `isRequest` is true. `archived` includes requests. `all` spans every thread, including chats kept out of the inbox. Every other filter narrows the folder, except `includeArchived`. Each folder is also a view: `inbox`, `awaitingReply` for `noReply`, `requests`, `archived` and `all`."
+            },
+            "required": false
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "A tag, by ID or by name. Names match ignoring case and accents. When a value is one tag's ID and another's name, the ID wins."
+              },
+              "description": "Threads whose contact has one of these tags. Repeat the key to match any of several."
+            },
+            "required": false
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "A status, by ID or by name. Names match ignoring case and accents. When a value is one status's ID and another's name, the ID wins."
+              },
+              "description": "Threads whose contact has one of these statuses. Repeat the key to match any of several."
+            },
+            "required": false
+          },
+          {
+            "name": "assigneeId",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Cuid2"
+              },
+              "description": "Threads whose `assigneeId`, the thread's own assignee or else its contact's, is one of these members. Repeat the key to match any of several."
+            },
+            "required": false
+          },
+          {
+            "name": "unassigned",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "`true` keeps threads with no assignee, including through their contact. Not combinable with `assigneeId`."
+            },
+            "required": false
+          },
+          {
+            "name": "campaignId",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Cuid2"
+              },
+              "description": "Threads these campaigns sent a message in. Campaign sends archive the thread, so pair it with `folder=archived`, `folder=all` or `includeArchived=true`. Repeat the key to match any of several."
+            },
+            "required": false
+          },
+          {
+            "name": "unread",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "`true` keeps threads unread for the agent's member, as `unread` shows them. A thread marked read moments ago may still be listed, with its current `unread`. Agents only: an API token has no member and gets `memberRequired`."
+            },
+            "required": false
+          },
+          {
+            "name": "awaitingReply",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "`true` keeps threads whose latest activity is inbound, the inbox's No reply."
+            },
+            "required": false
+          },
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "`true` adds the view's or folder's archived threads back, the inbox's With archived. A view that tests archived inside an any-of or a not-group keeps that test. No effect when the scope already includes archived threads."
+            },
+            "required": false
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Matched with typo tolerance against profile display names and usernames, the contact's name and the activity preview."
+            },
+            "required": true
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "How many best matches to return, from 1 to 50. Defaults to 25."
+            },
+            "required": false
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["profile", "contact", "accountLink", "assignee"]
+              },
+              "description": "Related resources to embed next to their ID field, one path per key, at most 4.",
+              "maxItems": 4
+            },
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThreadSearchPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/MemberRequired"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PlatformNotAvailable"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewNotFound"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimited"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Internal"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchUnavailable"
+                }
+              }
+            }
+          }
+        },
+        "description": "The threads that best match `q`, most relevant first, in one page. Use it to find a conversation by a person's name or username; to page through the best 1,000 matches in inbox order, use `q` on List threads.",
+        "summary": "Search threads",
+        "x-mcp-hints": {
+          "openWorldHint": true
+        }
+      }
+    },
+    "/threads/count": {
+      "get": {
+        "tags": ["Threads"],
+        "operationId": "threads.count",
+        "parameters": [
+          {
+            "name": "accountLinkId",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Cuid2"
+              },
+              "description": "Threads of these account links. Repeat the key to match any of several."
+            },
+            "required": false
+          },
+          {
+            "name": "platform",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Platform"
+              },
+              "description": "Repeat the key to match any of several."
+            },
+            "required": false
+          },
+          {
+            "name": "contactId",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Cuid2"
+              },
+              "description": "Threads with these contacts. With `accountLinkId`, finds the thread between an account and a contact. Repeat the key to match any of several."
+            },
+            "required": false
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "A view's `id` from List views: lists the threads that view lists, in place of `folder`. Every other filter narrows it, except `includeArchived`. A cursor issued for a saved view is `invalidCursor` once the view changes."
+            },
+            "required": false
+          },
+          {
+            "name": "folder",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["inbox", "noReply", "requests", "archived", "all"],
+              "description": "Defaults to `inbox`, threads that are neither archived nor requests, leaving out conversations a platform keeps outside the inbox, such as chats with bots. `noReply` is `inbox` with `awaitingReply=true`. `requests` holds unarchived threads where `isRequest` is true. `archived` includes requests. `all` spans every thread, including chats kept out of the inbox. Every other filter narrows the folder, except `includeArchived`. Each folder is also a view: `inbox`, `awaitingReply` for `noReply`, `requests`, `archived` and `all`."
+            },
+            "required": false
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "A tag, by ID or by name. Names match ignoring case and accents. When a value is one tag's ID and another's name, the ID wins."
+              },
+              "description": "Threads whose contact has one of these tags. Repeat the key to match any of several."
+            },
+            "required": false
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "A status, by ID or by name. Names match ignoring case and accents. When a value is one status's ID and another's name, the ID wins."
+              },
+              "description": "Threads whose contact has one of these statuses. Repeat the key to match any of several."
+            },
+            "required": false
+          },
+          {
+            "name": "assigneeId",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Cuid2"
+              },
+              "description": "Threads whose `assigneeId`, the thread's own assignee or else its contact's, is one of these members. Repeat the key to match any of several."
+            },
+            "required": false
+          },
+          {
+            "name": "unassigned",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "`true` keeps threads with no assignee, including through their contact. Not combinable with `assigneeId`."
+            },
+            "required": false
+          },
+          {
+            "name": "campaignId",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Cuid2"
+              },
+              "description": "Threads these campaigns sent a message in. Campaign sends archive the thread, so pair it with `folder=archived`, `folder=all` or `includeArchived=true`. Repeat the key to match any of several."
+            },
+            "required": false
+          },
+          {
+            "name": "unread",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "`true` keeps threads unread for the agent's member, as `unread` shows them. A thread marked read moments ago may still be listed, with its current `unread`. Agents only: an API token has no member and gets `memberRequired`."
+            },
+            "required": false
+          },
+          {
+            "name": "awaitingReply",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "`true` keeps threads whose latest activity is inbound, the inbox's No reply."
+            },
+            "required": false
+          },
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "`true` adds the view's or folder's archived threads back, the inbox's With archived. A view that tests archived inside an any-of or a not-group keeps that test. No effect when the scope already includes archived threads."
+            },
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThreadCount"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/MemberRequired"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PlatformNotAvailable"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewNotFound"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimited"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Internal"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchUnavailable"
+                }
+              }
+            }
+          }
+        },
+        "description": "How many threads the filters match, as the search index counts them; a thread changed in the last moments may be counted as it was. Use it to size a folder before paging through it.",
+        "summary": "Count threads",
         "x-mcp-hints": {
           "openWorldHint": true
         }
@@ -2103,6 +2700,72 @@
         "x-mcp-hints": {
           "openWorldHint": true
         }
+      }
+    },
+    "/views": {
+      "get": {
+        "tags": ["Views"],
+        "operationId": "views.list",
+        "parameters": [],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimited"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Internal"
+                }
+              }
+            }
+          }
+        },
+        "description": "Every view the caller may read: the system views the team has, then the team's saved views and, for an agent, its member's private ones. Pass a view's `id` as `view` to List, Search or Count threads. A view that depends on who is looking, such as `assigned` or an unread view, answers as the agent's member, or as the team owner for an API token.",
+        "summary": "List views"
       }
     },
     "/threads/{threadId}/messages": {
@@ -5290,8 +5953,8 @@
       },
       "Platform": {
         "type": "string",
-        "description": "The platform. Every team can use twitter, linkedin; a team may have others enabled.",
-        "examples": ["twitter", "linkedin"]
+        "description": "The platform. Every team can use twitter, linkedin, whatsapp, telegram; a team may have others enabled.",
+        "examples": ["twitter", "linkedin", "whatsapp", "telegram"]
       },
       "ConnectionRequestWithdrawnEvent": {
         "type": "object",
@@ -8398,14 +9061,21 @@
                   "message:reply",
                   "message:forward",
                   "message:answer",
+                  "message:poll",
+                  "message:event",
+                  "message:contact",
+                  "message:location",
+                  "message:callback",
                   "media:image",
                   "media:video",
                   "media:gif",
                   "media:file",
                   "media:audio",
+                  "media:sticker",
                   "thread:typing:send",
                   "thread:typing:receive",
                   "thread:seen:receive",
+                  "thread:seen:send",
                   "thread:message-requests",
                   "thread:delete:remote",
                   "directory:typeahead",
@@ -8413,6 +9083,7 @@
                   "thread:archive:mutate",
                   "thread:read:observe",
                   "thread:read:mutate",
+                  "thread:folders:import",
                   "profile:follow",
                   "profile:unfollow",
                   "profile:connect",
@@ -8960,8 +9631,8 @@
           },
           "status": {
             "type": "string",
-            "enum": ["ready", "pending", "processing", "failed"],
-            "description": "`ready` once `url` is usable. `pending` and `processing` while Inboxapp stores a copy: resolve the attachment again later. `failed` when Inboxapp gave up."
+            "enum": ["ready", "pending", "processing", "failed", "notArchived"],
+            "description": "`ready` once `url` is usable. `pending` and `processing` while Inboxapp stores a copy: resolve the attachment again later. `failed` when Inboxapp gave up. `notArchived` when the platform's limits keep Inboxapp from storing a copy at all."
           },
           "url": {
             "anyOf": [
@@ -9143,14 +9814,21 @@
                   "message:reply",
                   "message:forward",
                   "message:answer",
+                  "message:poll",
+                  "message:event",
+                  "message:contact",
+                  "message:location",
+                  "message:callback",
                   "media:image",
                   "media:video",
                   "media:gif",
                   "media:file",
                   "media:audio",
+                  "media:sticker",
                   "thread:typing:send",
                   "thread:typing:receive",
                   "thread:seen:receive",
+                  "thread:seen:send",
                   "thread:message-requests",
                   "thread:delete:remote",
                   "directory:typeahead",
@@ -9158,6 +9836,7 @@
                   "thread:archive:mutate",
                   "thread:read:observe",
                   "thread:read:mutate",
+                  "thread:folders:import",
                   "profile:follow",
                   "profile:unfollow",
                   "profile:connect",
@@ -9213,14 +9892,21 @@
                   "message:reply",
                   "message:forward",
                   "message:answer",
+                  "message:poll",
+                  "message:event",
+                  "message:contact",
+                  "message:location",
+                  "message:callback",
                   "media:image",
                   "media:video",
                   "media:gif",
                   "media:file",
                   "media:audio",
+                  "media:sticker",
                   "thread:typing:send",
                   "thread:typing:receive",
                   "thread:seen:receive",
+                  "thread:seen:send",
                   "thread:message-requests",
                   "thread:delete:remote",
                   "directory:typeahead",
@@ -9228,6 +9914,7 @@
                   "thread:archive:mutate",
                   "thread:read:observe",
                   "thread:read:mutate",
+                  "thread:folders:import",
                   "profile:follow",
                   "profile:unfollow",
                   "profile:connect",
@@ -9401,6 +10088,13 @@
               "description": "A tag: a label the team puts on contacts."
             }
           },
+          "phones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContactPhone"
+            },
+            "description": "Each number once: the profiles' own, then those team members added."
+          },
           "notes": {
             "anyOf": [
               {
@@ -9466,6 +10160,7 @@
           "profiles",
           "statusId",
           "tagIds",
+          "phones",
           "notes",
           "valuation",
           "assigneeId",
@@ -9519,6 +10214,24 @@
         "required": ["id", "name", "email", "imageUrl", "role", "createdAt"],
         "additionalProperties": false,
         "description": "A person on the team, who can be assigned threads and contacts."
+      },
+      "ContactPhone": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "string",
+            "description": "In E.164."
+          },
+          "profileIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The contact's profiles that publish this number. Empty when a team member added it."
+          }
+        },
+        "required": ["number", "profileIds"],
+        "additionalProperties": false
       },
       "Profile": {
         "type": "object",
@@ -10188,6 +10901,90 @@
             "type": "object",
             "properties": {
               "_tag": {
+                "type": "string",
+                "enum": ["whatsapp"]
+              },
+              "phoneNumber": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "verifiedName": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "business": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": ["_tag"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "_tag": {
+                "type": "string",
+                "enum": ["telegram"]
+              },
+              "verified": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "premium": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "color": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": ["_tag"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "_tag": {
                 "type": "string"
               }
             },
@@ -10268,14 +11065,21 @@
                 "message:reply",
                 "message:forward",
                 "message:answer",
+                "message:poll",
+                "message:event",
+                "message:contact",
+                "message:location",
+                "message:callback",
                 "media:image",
                 "media:video",
                 "media:gif",
                 "media:file",
                 "media:audio",
+                "media:sticker",
                 "thread:typing:send",
                 "thread:typing:receive",
                 "thread:seen:receive",
+                "thread:seen:send",
                 "thread:message-requests",
                 "thread:delete:remote",
                 "directory:typeahead",
@@ -10283,6 +11087,7 @@
                 "thread:archive:mutate",
                 "thread:read:observe",
                 "thread:read:mutate",
+                "thread:folders:import",
                 "profile:follow",
                 "profile:unfollow",
                 "profile:connect",
@@ -10606,6 +11411,10 @@
             "type": "string",
             "description": "The text as Inboxapp last saw it. A deleted message keeps its content."
           },
+          "truncated": {
+            "type": "boolean",
+            "description": "True when the text was longer than Inboxapp stores and `content` holds only its start."
+          },
           "entities": {
             "$ref": "#/components/schemas/MessageEntities"
           },
@@ -10623,6 +11432,17 @@
             },
             "description": "Media, and at most one link card, told apart by `kind`."
           },
+          "rich": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Rich"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A poll, event, contact cards or location. Null for any other message."
+          },
           "forwarded": {
             "anyOf": [
               {
@@ -10637,16 +11457,55 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "origin": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Who sent the original, as plain text: a person's name or a channel's title. Null when the platform names no one."
+                          },
+                          "sentAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "examples": ["2026-09-14T10:32:00.000Z"]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "When the original was sent, where the platform says."
+                          }
+                        },
+                        "required": ["name", "sentAt"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Where the forwarded message came from. Null on platforms that don't say."
                   }
                 },
-                "required": ["content"],
+                "required": ["content", "origin"],
                 "additionalProperties": false
               },
               {
                 "type": "null"
               }
             ],
-            "description": "Set when the message forwards another one, with the forwarded text as the sender's app declared it. Null otherwise."
+            "description": "Set when the message forwards another one. `content` is the forwarded text as the sender's app declared it, on platforms that restate it inside the forward; elsewhere the message's own content is what was forwarded. Null otherwise."
           },
           "reactions": {
             "type": "array",
@@ -10764,8 +11623,10 @@
           "direction",
           "sentBy",
           "content",
+          "truncated",
           "entities",
           "attachments",
+          "rich",
           "forwarded",
           "reactions",
           "editedAt",
@@ -10843,7 +11704,7 @@
           },
           "unread": {
             "type": "boolean",
-            "description": "Marked unread in Inboxapp for the team owner, whose view the API takes. A thread no one has opened yet is not unread."
+            "description": "Marked unread in Inboxapp for the caller: an agent's member, or the team owner for an API token. A thread no one has opened yet is not unread."
           },
           "restrictions": {
             "type": "array",
@@ -10858,14 +11719,21 @@
                 "message:reply",
                 "message:forward",
                 "message:answer",
+                "message:poll",
+                "message:event",
+                "message:contact",
+                "message:location",
+                "message:callback",
                 "media:image",
                 "media:video",
                 "media:gif",
                 "media:file",
                 "media:audio",
+                "media:sticker",
                 "thread:typing:send",
                 "thread:typing:receive",
                 "thread:seen:receive",
+                "thread:seen:send",
                 "thread:message-requests",
                 "thread:delete:remote",
                 "directory:typeahead",
@@ -10873,6 +11741,7 @@
                 "thread:archive:mutate",
                 "thread:read:observe",
                 "thread:read:mutate",
+                "thread:folders:import",
                 "profile:follow",
                 "profile:unfollow",
                 "profile:connect",
@@ -10891,6 +11760,11 @@
             "type": "string",
             "enum": ["enabled", "disabled", "teamDefault"],
             "description": "Whether Inboxapp sends typing indicators to the platform while someone composes in this thread. `teamDefault` follows the team's setting."
+          },
+          "readReceipts": {
+            "type": "string",
+            "enum": ["onOpen", "onReply", "teamDefault"],
+            "description": "When Inboxapp tells the contact you've read their messages in this thread. Replying always does; `onOpen` also does when a team member opens the thread, `onReply` waits for the reply. `teamDefault` follows the team's setting."
           },
           "lastMessage": {
             "anyOf": [
@@ -10965,6 +11839,7 @@
           "restrictions",
           "syncing",
           "typingIndicators",
+          "readReceipts",
           "lastMessage",
           "activity",
           "seen",
@@ -11110,6 +11985,28 @@
             "type": "object",
             "properties": {
               "_tag": {
+                "type": "string",
+                "enum": ["whatsapp"]
+              }
+            },
+            "required": ["_tag"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "_tag": {
+                "type": "string",
+                "enum": ["telegram"]
+              }
+            },
+            "required": ["_tag"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "_tag": {
                 "type": "string"
               }
             },
@@ -11118,6 +12015,319 @@
           }
         ],
         "description": "Fields only one platform has, tagged by `_tag`. Ignore tags you don't know."
+      },
+      "Rich": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["poll"]
+              },
+              "question": {
+                "type": "string"
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "multiple": {
+                "type": "boolean",
+                "description": "Whether a voter may pick several options."
+              },
+              "closed": {
+                "type": "boolean",
+                "description": "Whether the poll stopped taking votes."
+              }
+            },
+            "required": ["type", "question", "options", "multiple", "closed"],
+            "additionalProperties": false,
+            "title": "Poll"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["event"]
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "startsAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "examples": ["2026-09-14T10:32:00.000Z"]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Null when the platform gave no time."
+              },
+              "endsAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "examples": ["2026-09-14T10:32:00.000Z"]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Null when the platform gave no time."
+              },
+              "location": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "joinLink": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "canceled": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "type",
+              "name",
+              "description",
+              "startsAt",
+              "endsAt",
+              "location",
+              "joinLink",
+              "canceled"
+            ],
+            "additionalProperties": false,
+            "title": "Event",
+            "description": "The organizer's latest version of the event."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["contacts"]
+              },
+              "contacts": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RichContact"
+                }
+              }
+            },
+            "required": ["type", "contacts"],
+            "additionalProperties": false,
+            "title": "Contacts",
+            "description": "Shared contact cards."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["location"]
+              },
+              "latitude": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity", "-Infinity", "NaN"]
+                  }
+                ]
+              },
+              "longitude": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity", "-Infinity", "NaN"]
+                  }
+                ]
+              },
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "address": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "live": {
+                "type": "boolean",
+                "description": "Whether the sender shares their position as it moves."
+              }
+            },
+            "required": [
+              "type",
+              "latitude",
+              "longitude",
+              "name",
+              "address",
+              "live"
+            ],
+            "additionalProperties": false,
+            "title": "Location"
+          }
+        ],
+        "description": "Content the platform draws as a card, told apart by `type`. The message's `content` is its plain-text preview."
+      },
+      "RichContact": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "organization": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "phones": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "number": {
+                  "type": "string"
+                },
+                "label": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The sender's label, such as `mobile`. Null when it has none."
+                }
+              },
+              "required": ["number", "label"],
+              "additionalProperties": false
+            }
+          },
+          "emails": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "label": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The sender's label, such as `mobile`. Null when it has none."
+                }
+              },
+              "required": ["value", "label"],
+              "additionalProperties": false
+            }
+          },
+          "urls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "birthday": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`YYYY-MM-DD`, or `--MM-DD` when the card gives no year."
+          }
+        },
+        "required": [
+          "name",
+          "organization",
+          "title",
+          "phones",
+          "emails",
+          "addresses",
+          "urls",
+          "birthday"
+        ],
+        "additionalProperties": false,
+        "description": "A contact card."
       },
       "AttachmentCard": {
         "type": "object",
@@ -11523,7 +12733,19 @@
               "properties": {
                 "kind": {
                   "type": "string",
-                  "enum": ["bold", "list", "orderedList", "listItem"]
+                  "enum": [
+                    "bold",
+                    "italic",
+                    "underline",
+                    "strikethrough",
+                    "code",
+                    "pre",
+                    "spoiler",
+                    "blockquote",
+                    "list",
+                    "orderedList",
+                    "listItem"
+                  ]
                 },
                 "indices": {
                   "type": "object",
@@ -11554,12 +12776,16 @@
                   "required": ["start", "end"],
                   "additionalProperties": false,
                   "description": "Offsets into `content` in Unicode code points, end-exclusive. A JavaScript client slices `Array.from(content)`, not `content`."
+                },
+                "language": {
+                  "type": "string",
+                  "description": "A `pre` block's language, when the sender named one."
                 }
               },
               "required": ["kind", "indices"],
               "additionalProperties": false
             },
-            "description": "Rich-text formatting. A `list` or `orderedList` spans its `listItem`s."
+            "description": "Rich-text formatting. A `list` or `orderedList` spans its `listItem`s, and spans may nest."
           }
         },
         "required": [
@@ -11578,7 +12804,8 @@
         "properties": {
           "content": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Up to the platform's `limits.characters`, or `limits.captionCharacters` when the message carries media. Longer content fails with `contentRejected`."
           }
         },
         "required": ["content"],
@@ -11809,6 +13036,9 @@
             "minLength": 1,
             "description": "Up to the platform's `limits.characters`. Longer content fails with `contentRejected`."
           },
+          "rich": {
+            "$ref": "#/components/schemas/SendRich"
+          },
           "replyToMessageId": {
             "allOf": [
               {
@@ -11818,9 +13048,230 @@
                 "description": "A message in the thread this send lands in, to reply to."
               }
             ]
+          },
+          "route": {
+            "type": "string",
+            "enum": [
+              "inmail",
+              "sponsored",
+              "offer",
+              "sms",
+              "bot",
+              "salesNavigator"
+            ],
+            "description": "How a first message opens its conversation, such as `inmail` or `salesNavigator` on LinkedIn. Sent that way or refused, never another way: a route the platform doesn't have fails with `contentRejected`, and one this account link can't take to the recipient now fails with `recipientUnavailable`. Without it the message takes the platform's preferred route. Refused on a conversation that already exists. Needs the Advanced API add-on."
+          },
+          "subject": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Heads a first message on a route that takes a subject, such as `salesNavigator`, which requires one, or `inmail`, where it is optional when LinkedIn offers one. Without it, a route that requires one fails with `contentRejected`. Ignored on replies."
           }
         },
-        "required": ["target", "content"],
+        "required": ["target"],
+        "additionalProperties": false
+      },
+      "SendRich": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["poll"]
+              },
+              "question": {
+                "type": "string"
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "At least 2, each different."
+              },
+              "multiple": {
+                "type": "boolean",
+                "allOf": [
+                  {
+                    "description": "Whether a voter may pick several options. Defaults to false."
+                  }
+                ]
+              }
+            },
+            "required": ["type", "question", "options"],
+            "additionalProperties": false,
+            "title": "Poll",
+            "description": "Needs `message:poll`."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["event"]
+              },
+              "name": {
+                "type": "string"
+              },
+              "startsAt": {
+                "type": "string",
+                "format": "date-time",
+                "examples": ["2026-09-14T10:00:00.000Z"]
+              },
+              "endsAt": {
+                "type": "string",
+                "format": "date-time",
+                "examples": ["2026-09-14T10:00:00.000Z"],
+                "allOf": [
+                  {
+                    "description": "After `startsAt`."
+                  }
+                ]
+              },
+              "description": {
+                "type": "string"
+              },
+              "location": {
+                "type": "string"
+              },
+              "joinLink": {
+                "type": "string"
+              }
+            },
+            "required": ["type", "name", "startsAt"],
+            "additionalProperties": false,
+            "title": "Event",
+            "description": "Needs `message:event`."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["contacts"]
+              },
+              "contacts": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SendContact"
+                },
+                "description": "At least 1. Each card needs a name and a phone number."
+              }
+            },
+            "required": ["type", "contacts"],
+            "additionalProperties": false,
+            "title": "Contacts",
+            "description": "Needs `message:contact`."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["location"]
+              },
+              "latitude": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity", "-Infinity", "NaN"]
+                  }
+                ]
+              },
+              "longitude": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity", "-Infinity", "NaN"]
+                  }
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "address": {
+                "type": "string"
+              }
+            },
+            "required": ["type", "latitude", "longitude"],
+            "additionalProperties": false,
+            "title": "Location",
+            "description": "Needs `message:location`."
+          }
+        ],
+        "description": "Sent alone in place of `content`. Content the platform can't carry fails with `contentRejected`."
+      },
+      "SendContact": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "phones": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "number": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": ["number"],
+              "additionalProperties": false
+            }
+          },
+          "emails": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "organization": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": ["value"],
+              "additionalProperties": false
+            }
+          },
+          "urls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "An `http` or `https` URL.",
+              "examples": ["https://example.com"]
+            }
+          },
+          "birthday": {
+            "type": "string",
+            "description": "`YYYY-MM-DD`, or `--MM-DD` without a year.",
+            "examples": ["1815-12-10", "--12-10"]
+          }
+        },
+        "required": ["name", "phones"],
         "additionalProperties": false
       },
       "InvalidCursor": {
@@ -11868,6 +13319,84 @@
         "additionalProperties": false,
         "description": "Ordered by `createdAt`, newest first unless `order` is `asc`."
       },
+      "ViewPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/View"
+            }
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Pass it back as `cursor`, with the same filters, to read the next page. Null on the last page."
+          }
+        },
+        "required": ["data", "nextCursor"],
+        "additionalProperties": false,
+        "description": "System views in the sidebar's default order, then saved views by name, in one page."
+      },
+      "View": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Pass it as `view` to List, Search or Count threads. A system view's id is its key, such as `inbox`, `requests` or `awaitingReply`; a saved view's is its Inboxapp ID."
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["system", "saved"],
+            "description": "`system` views every team has; `saved` views the team's members made."
+          },
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "visibility": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["team", "private"]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A saved view is `team`, listed to every member, or `private` to its creator. Null on system views."
+          },
+          "createdBy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The member who made a saved view, which may have left the team. Null on system views."
+          }
+        },
+        "required": ["id", "kind", "name", "icon", "visibility", "createdBy"],
+        "additionalProperties": false,
+        "description": "A named set of threads. Views that depend on who is looking, such as `assigned` and unread ones, answer as the agent's member, or as the team owner for an API token, like every read."
+      },
       "TypingSignal": {
         "type": "object",
         "properties": {
@@ -11912,7 +13441,7 @@
           },
           "unread": {
             "type": "boolean",
-            "description": "Marks the thread read or unread for the team owner. Also applied on the platform when the account link has `thread:read:mutate`."
+            "description": "Marks the thread read or unread for the caller: an agent's member, or the team owner for an API token. Also applied on the platform when the account link has `thread:read:mutate`."
           },
           "assigneeId": {
             "anyOf": [
@@ -11929,10 +13458,124 @@
             "type": "string",
             "enum": ["enabled", "disabled", "teamDefault"],
             "description": "Whether Inboxapp sends typing indicators to the platform while someone composes in this thread. `teamDefault` follows the team's setting."
+          },
+          "readReceipts": {
+            "type": "string",
+            "enum": ["onOpen", "onReply", "teamDefault"],
+            "description": "When Inboxapp tells the contact you've read their messages in this thread. Replying always does; `onOpen` also does when a team member opens the thread, `onReply` waits for the reply. `teamDefault` follows the team's setting."
           }
         },
         "additionalProperties": false,
         "description": "Omitted fields are left unchanged, and `null` clears a nullable field."
+      },
+      "ViewNotFound": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["viewNotFound"]
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "null"
+          },
+          "requestId": {
+            "type": "string"
+          }
+        },
+        "required": ["code", "message", "details", "requestId"],
+        "additionalProperties": false
+      },
+      "SearchUnavailable": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["searchUnavailable"]
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "null"
+          },
+          "requestId": {
+            "type": "string"
+          }
+        },
+        "required": ["code", "message", "details", "requestId"],
+        "additionalProperties": false
+      },
+      "MemberRequired": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["memberRequired"]
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "properties": {
+              "parameter": {
+                "type": "string"
+              }
+            },
+            "required": ["parameter"],
+            "additionalProperties": false
+          },
+          "requestId": {
+            "type": "string"
+          }
+        },
+        "required": ["code", "message", "details", "requestId"],
+        "additionalProperties": false
+      },
+      "ThreadCount": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Threads the filters match, up to 10,000."
+          },
+          "capped": {
+            "type": "boolean",
+            "description": "True when there are at least 10,000, so `count` stops there."
+          }
+        },
+        "required": ["count", "capped"],
+        "additionalProperties": false
+      },
+      "ThreadSearchPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Thread"
+            }
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Pass it back as `cursor`, with the same filters, to read the next page. Null on the last page."
+          }
+        },
+        "required": ["data", "nextCursor"],
+        "additionalProperties": false,
+        "description": "Most relevant first, in one page: `nextCursor` is always null."
       },
       "ThreadPage": {
         "type": "object",
@@ -12444,14 +14087,21 @@
                 "message:reply",
                 "message:forward",
                 "message:answer",
+                "message:poll",
+                "message:event",
+                "message:contact",
+                "message:location",
+                "message:callback",
                 "media:image",
                 "media:video",
                 "media:gif",
                 "media:file",
                 "media:audio",
+                "media:sticker",
                 "thread:typing:send",
                 "thread:typing:receive",
                 "thread:seen:receive",
+                "thread:seen:send",
                 "thread:message-requests",
                 "thread:delete:remote",
                 "directory:typeahead",
@@ -12459,6 +14109,7 @@
                 "thread:archive:mutate",
                 "thread:read:observe",
                 "thread:read:mutate",
+                "thread:folders:import",
                 "profile:follow",
                 "profile:unfollow",
                 "profile:connect",
@@ -12485,6 +14136,19 @@
                 ],
                 "description": "Maximum characters in a message, counting an emoji as one. Null when the platform sets none."
               },
+              "captionCharacters": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Maximum characters in a message that carries media, where it is lower than `characters`. Null when the platform sets none."
+              },
               "mediaCount": {
                 "anyOf": [
                   {
@@ -12496,7 +14160,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Maximum attachments in a message. Null when the platform sets none."
+                "description": "Maximum attachments sent together. A platform that carries one per message delivers each as a message of its own. Null when the platform sets none."
               },
               "mediaBytes": {
                 "anyOf": [
@@ -12571,6 +14235,7 @@
             },
             "required": [
               "characters",
+              "captionCharacters",
               "mediaCount",
               "mediaBytes",
               "mediaTypes",
@@ -12622,6 +14287,31 @@
                 "minimum": -9007199254740991,
                 "maximum": 9007199254740991
               },
+              "message:poll": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "message:event": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "message:contact": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "message:location": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "message:callback": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
               "media:image": {
                 "type": "integer",
                 "minimum": -9007199254740991,
@@ -12647,6 +14337,11 @@
                 "minimum": -9007199254740991,
                 "maximum": 9007199254740991
               },
+              "media:sticker": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
               "thread:typing:send": {
                 "type": "integer",
                 "minimum": -9007199254740991,
@@ -12658,6 +14353,11 @@
                 "maximum": 9007199254740991
               },
               "thread:seen:receive": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "thread:seen:send": {
                 "type": "integer",
                 "minimum": -9007199254740991,
                 "maximum": 9007199254740991
@@ -12693,6 +14393,11 @@
                 "maximum": 9007199254740991
               },
               "thread:read:mutate": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "thread:folders:import": {
                 "type": "integer",
                 "minimum": -9007199254740991,
                 "maximum": 9007199254740991
@@ -12830,6 +14535,10 @@
     {
       "name": "Threads",
       "description": "Conversations between one of the team's account links and one profile."
+    },
+    {
+      "name": "Views",
+      "description": "The named sets of threads the team works from: system views and the views its members saved."
     },
     {
       "name": "Messages",

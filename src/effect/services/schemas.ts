@@ -28,6 +28,7 @@ export type PlatformInfoLimits = M.PlatformInfoLimits;
 export const PlatformInfoLimits = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
     characters: S.NullOr(S.Number),
+    captionCharacters: S.NullOr(S.Number),
     mediaCount: S.NullOr(S.Number),
     mediaBytes: S.NullOr(S.Number),
     mediaTypes: S.NullOr(PlatformInfoLimitsMediaTypes),
@@ -59,14 +60,21 @@ export const PlatformInfoMutationWindows = /*@__PURE__*/ S.suspend(() =>
     "message:reply": S.optional(S.Number),
     "message:forward": S.optional(S.Number),
     "message:answer": S.optional(S.Number),
+    "message:poll": S.optional(S.Number),
+    "message:event": S.optional(S.Number),
+    "message:contact": S.optional(S.Number),
+    "message:location": S.optional(S.Number),
+    "message:callback": S.optional(S.Number),
     "media:image": S.optional(S.Number),
     "media:video": S.optional(S.Number),
     "media:gif": S.optional(S.Number),
     "media:file": S.optional(S.Number),
     "media:audio": S.optional(S.Number),
+    "media:sticker": S.optional(S.Number),
     "thread:typing:send": S.optional(S.Number),
     "thread:typing:receive": S.optional(S.Number),
     "thread:seen:receive": S.optional(S.Number),
+    "thread:seen:send": S.optional(S.Number),
     "thread:message-requests": S.optional(S.Number),
     "thread:delete:remote": S.optional(S.Number),
     "directory:typeahead": S.optional(S.Number),
@@ -74,6 +82,7 @@ export const PlatformInfoMutationWindows = /*@__PURE__*/ S.suspend(() =>
     "thread:archive:mutate": S.optional(S.Number),
     "thread:read:observe": S.optional(S.Number),
     "thread:read:mutate": S.optional(S.Number),
+    "thread:folders:import": S.optional(S.Number),
     "profile:follow": S.optional(S.Number),
     "profile:unfollow": S.optional(S.Number),
     "profile:connect": S.optional(S.Number),
@@ -264,6 +273,7 @@ export const Contact = /*@__PURE__*/ S.suspend(() =>
     profiles: S.Array(Profile),
     statusId: S.NullOr(S.String),
     tagIds: S.Array(S.String),
+    phones: S.Array(ContactPhone),
     notes: S.NullOr(S.String),
     valuation: S.NullOr(ContactValuation),
     assigneeId: S.NullOr(S.String),
@@ -357,7 +367,13 @@ export const ProfileAccountStatus =
 
 export type ProfilePlatformData = M.ProfilePlatformData;
 export const ProfilePlatformData = /*@__PURE__*/ S.suspend(() =>
-  S.Union([ProfilePlatformDataTwitter, ProfilePlatformDataLinkedin, ProfilePlatformDataOther]),
+  S.Union([
+    ProfilePlatformDataTwitter,
+    ProfilePlatformDataLinkedin,
+    ProfilePlatformDataWhatsapp,
+    ProfilePlatformDataTelegram,
+    ProfilePlatformDataOther,
+  ]),
 ).annotate({ identifier: "ProfilePlatformData" }) as any as S.Schema<M.ProfilePlatformData>;
 
 export type ProfilePlatformDataTwitter = M.ProfilePlatformDataTwitter;
@@ -471,6 +487,30 @@ export type ProfilePlatformDataLinkedinPageKind = M.ProfilePlatformDataLinkedinP
 export const ProfilePlatformDataLinkedinPageKind =
   /*@__PURE__*/ S.String as any as S.Schema<M.ProfilePlatformDataLinkedinPageKind>;
 
+export type ProfilePlatformDataWhatsapp = M.ProfilePlatformDataWhatsapp;
+export const ProfilePlatformDataWhatsapp = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    _tag: S.Literal("whatsapp"),
+    phoneNumber: S.optional(S.NullOr(S.String)),
+    verifiedName: S.optional(S.NullOr(S.String)),
+    business: S.optional(S.NullOr(S.Boolean)),
+  }),
+).annotate({
+  identifier: "ProfilePlatformDataWhatsapp",
+}) as any as S.Schema<M.ProfilePlatformDataWhatsapp>;
+
+export type ProfilePlatformDataTelegram = M.ProfilePlatformDataTelegram;
+export const ProfilePlatformDataTelegram = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    _tag: S.Literal("telegram"),
+    verified: S.optional(S.NullOr(S.Boolean)),
+    premium: S.optional(S.NullOr(S.Boolean)),
+    color: S.optional(S.NullOr(S.Number)),
+  }),
+).annotate({
+  identifier: "ProfilePlatformDataTelegram",
+}) as any as S.Schema<M.ProfilePlatformDataTelegram>;
+
 export type ProfilePlatformDataOther = M.ProfilePlatformDataOther;
 export const ProfilePlatformDataOther = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -500,6 +540,14 @@ export const RelationshipConnectionRequest = /*@__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "RelationshipConnectionRequest",
 }) as any as S.Schema<M.RelationshipConnectionRequest>;
+
+export type ContactPhone = M.ContactPhone;
+export const ContactPhone = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    number: S.String,
+    profileIds: S.Array(S.String),
+  }),
+).annotate({ identifier: "ContactPhone" }) as any as S.Schema<M.ContactPhone>;
 
 export type ContactValuation = M.ContactValuation;
 export const ContactValuation = /*@__PURE__*/ S.suspend(() =>
@@ -750,6 +798,7 @@ export const Thread = /*@__PURE__*/ S.suspend(() =>
     restrictions: S.Array(ThreadRestrictionsItem),
     syncing: S.Boolean,
     typingIndicators: ThreadTypingIndicators,
+    readReceipts: ThreadReadReceipts,
     lastMessage: S.NullOr(LastMessage),
     activity: S.NullOr(ThreadActivity),
     seen: S.NullOr(ThreadSeen),
@@ -773,6 +822,9 @@ export const ThreadRestrictionsItem =
 export type ThreadTypingIndicators = M.ThreadTypingIndicators;
 export const ThreadTypingIndicators =
   /*@__PURE__*/ S.String as any as S.Schema<M.ThreadTypingIndicators>;
+
+export type ThreadReadReceipts = M.ThreadReadReceipts;
+export const ThreadReadReceipts = /*@__PURE__*/ S.String as any as S.Schema<M.ThreadReadReceipts>;
 
 export type LastMessage = M.LastMessage;
 export const LastMessage = /*@__PURE__*/ S.suspend(() =>
@@ -821,6 +873,55 @@ export const ThreadDelivered = /*@__PURE__*/ S.suspend(() =>
   }),
 ).annotate({ identifier: "ThreadDelivered" }) as any as S.Schema<M.ThreadDelivered>;
 
+export type MemberRequiredDetails = M.MemberRequiredDetails;
+export const MemberRequiredDetails = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    parameter: S.String,
+  }),
+).annotate({ identifier: "MemberRequiredDetails" }) as any as S.Schema<M.MemberRequiredDetails>;
+
+export type ThreadsSearchRequestFolder = M.ThreadsSearchRequestFolder;
+export const ThreadsSearchRequestFolder = /*@__PURE__*/ S.Literals([
+  "inbox",
+  "noReply",
+  "requests",
+  "archived",
+  "all",
+]) as any as S.Schema<M.ThreadsSearchRequestFolder>;
+
+export type ThreadsSearchRequestExpandItem = M.ThreadsSearchRequestExpandItem;
+export const ThreadsSearchRequestExpandItem = /*@__PURE__*/ S.Literals([
+  "profile",
+  "contact",
+  "accountLink",
+  "assignee",
+]) as any as S.Schema<M.ThreadsSearchRequestExpandItem>;
+
+export type ThreadSearchPage = M.ThreadSearchPage;
+export const ThreadSearchPage = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    data: S.Array(Thread),
+    nextCursor: S.NullOr(S.String),
+  }),
+).annotate({ identifier: "ThreadSearchPage" }) as any as S.Schema<M.ThreadSearchPage>;
+
+export type ThreadsCountRequestFolder = M.ThreadsCountRequestFolder;
+export const ThreadsCountRequestFolder = /*@__PURE__*/ S.Literals([
+  "inbox",
+  "noReply",
+  "requests",
+  "archived",
+  "all",
+]) as any as S.Schema<M.ThreadsCountRequestFolder>;
+
+export type ThreadCount = M.ThreadCount;
+export const ThreadCount = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    count: S.Number,
+    capped: S.Boolean,
+  }),
+).annotate({ identifier: "ThreadCount" }) as any as S.Schema<M.ThreadCount>;
+
 export type ThreadsGetRequestExpandItem = M.ThreadsGetRequestExpandItem;
 export const ThreadsGetRequestExpandItem = /*@__PURE__*/ S.Literals([
   "profile",
@@ -835,6 +936,13 @@ export const ThreadUpdateTypingIndicators = /*@__PURE__*/ S.Literals([
   "disabled",
   "teamDefault",
 ]) as any as S.Schema<M.ThreadUpdateTypingIndicators>;
+
+export type ThreadUpdateReadReceipts = M.ThreadUpdateReadReceipts;
+export const ThreadUpdateReadReceipts = /*@__PURE__*/ S.Literals([
+  "onOpen",
+  "onReply",
+  "teamDefault",
+]) as any as S.Schema<M.ThreadUpdateReadReceipts>;
 
 export type ThreadDeletion = M.ThreadDeletion;
 export const ThreadDeletion = /*@__PURE__*/ S.suspend(() =>
@@ -859,6 +967,32 @@ export const TypingSignalStatus = /*@__PURE__*/ S.String as any as S.Schema<M.Ty
 
 export type TypingSignalReason = M.TypingSignalReason;
 export const TypingSignalReason = /*@__PURE__*/ S.String as any as S.Schema<M.TypingSignalReason>;
+
+export type ViewPage = M.ViewPage;
+export const ViewPage = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    data: S.Array(View),
+    nextCursor: S.NullOr(S.String),
+  }),
+).annotate({ identifier: "ViewPage" }) as any as S.Schema<M.ViewPage>;
+
+export type View = M.View;
+export const View = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    id: S.String,
+    kind: ViewKind,
+    name: S.String,
+    icon: S.NullOr(S.String),
+    visibility: S.NullOr(ViewVisibility),
+    createdBy: S.NullOr(S.String),
+  }),
+).annotate({ identifier: "View" }) as any as S.Schema<M.View>;
+
+export type ViewKind = M.ViewKind;
+export const ViewKind = /*@__PURE__*/ S.String as any as S.Schema<M.ViewKind>;
+
+export type ViewVisibility = M.ViewVisibility;
+export const ViewVisibility = /*@__PURE__*/ S.String as any as S.Schema<M.ViewVisibility>;
 
 export type MessagesListRequestOrder = M.MessagesListRequestOrder;
 export const MessagesListRequestOrder = /*@__PURE__*/ S.Literals([
@@ -894,8 +1028,10 @@ export const Message = /*@__PURE__*/ S.suspend(() =>
     direction: MessageDirection,
     sentBy: S.NullOr(MessageSentBy),
     content: S.String,
+    truncated: S.Boolean,
     entities: MessageEntities,
     attachments: S.Array(MessageAttachmentsItem),
+    rich: S.NullOr(Rich),
     forwarded: S.NullOr(MessageForwarded),
     reactions: S.Array(Reaction),
     editedAt: S.NullOr(S.String),
@@ -1091,6 +1227,7 @@ export const MessageEntitiesFormatItem = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
     kind: MessageEntitiesFormatItemKind,
     indices: MessageEntitiesFormatItemIndices,
+    language: S.optional(S.String),
   }),
 ).annotate({
   identifier: "MessageEntitiesFormatItem",
@@ -1247,12 +1384,103 @@ export const AttachmentCardThumbnail = /*@__PURE__*/ S.suspend(() =>
   }),
 ).annotate({ identifier: "AttachmentCardThumbnail" }) as any as S.Schema<M.AttachmentCardThumbnail>;
 
+export type Rich = M.Rich;
+export const Rich = /*@__PURE__*/ S.suspend(() =>
+  S.Union([RichPoll, RichEvent, RichContacts, RichLocation]),
+).annotate({ identifier: "Rich" }) as any as S.Schema<M.Rich>;
+
+export type RichPoll = M.RichPoll;
+export const RichPoll = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("poll"),
+    question: S.String,
+    options: S.Array(S.String),
+    multiple: S.Boolean,
+    closed: S.Boolean,
+  }),
+).annotate({ identifier: "RichPoll" }) as any as S.Schema<M.RichPoll>;
+
+export type RichEvent = M.RichEvent;
+export const RichEvent = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("event"),
+    name: S.String,
+    description: S.NullOr(S.String),
+    startsAt: S.NullOr(S.String),
+    endsAt: S.NullOr(S.String),
+    location: S.NullOr(S.String),
+    joinLink: S.NullOr(S.String),
+    canceled: S.Boolean,
+  }),
+).annotate({ identifier: "RichEvent" }) as any as S.Schema<M.RichEvent>;
+
+export type RichContacts = M.RichContacts;
+export const RichContacts = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("contacts"),
+    contacts: S.Array(RichContact),
+  }),
+).annotate({ identifier: "RichContacts" }) as any as S.Schema<M.RichContacts>;
+
+export type RichContact = M.RichContact;
+export const RichContact = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    name: S.String,
+    organization: S.NullOr(S.String),
+    title: S.NullOr(S.String),
+    phones: S.Array(RichContactPhonesItem),
+    emails: S.Array(S.String),
+    addresses: S.Array(RichContactAddressesItem),
+    urls: S.Array(S.String),
+    birthday: S.NullOr(S.String),
+  }),
+).annotate({ identifier: "RichContact" }) as any as S.Schema<M.RichContact>;
+
+export type RichContactPhonesItem = M.RichContactPhonesItem;
+export const RichContactPhonesItem = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    number: S.String,
+    label: S.NullOr(S.String),
+  }),
+).annotate({ identifier: "RichContactPhonesItem" }) as any as S.Schema<M.RichContactPhonesItem>;
+
+export type RichContactAddressesItem = M.RichContactAddressesItem;
+export const RichContactAddressesItem = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    value: S.String,
+    label: S.NullOr(S.String),
+  }),
+).annotate({
+  identifier: "RichContactAddressesItem",
+}) as any as S.Schema<M.RichContactAddressesItem>;
+
+export type RichLocation = M.RichLocation;
+export const RichLocation = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("location"),
+    latitude: S.Number,
+    longitude: S.Number,
+    name: S.NullOr(S.String),
+    address: S.NullOr(S.String),
+    live: S.Boolean,
+  }),
+).annotate({ identifier: "RichLocation" }) as any as S.Schema<M.RichLocation>;
+
 export type MessageForwarded = M.MessageForwarded;
 export const MessageForwarded = /*@__PURE__*/ S.suspend(() =>
   S.Struct({
     content: S.NullOr(S.String),
+    origin: S.NullOr(MessageForwardedOrigin),
   }),
 ).annotate({ identifier: "MessageForwarded" }) as any as S.Schema<M.MessageForwarded>;
+
+export type MessageForwardedOrigin = M.MessageForwardedOrigin;
+export const MessageForwardedOrigin = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    name: S.NullOr(S.String),
+    sentAt: S.NullOr(S.String),
+  }),
+).annotate({ identifier: "MessageForwardedOrigin" }) as any as S.Schema<M.MessageForwardedOrigin>;
 
 export type Reaction = M.Reaction;
 export const Reaction = /*@__PURE__*/ S.suspend(() =>
@@ -1300,7 +1528,13 @@ export const ReactionAuthorUnknown = /*@__PURE__*/ S.suspend(() =>
 
 export type MessagePlatformData = M.MessagePlatformData;
 export const MessagePlatformData = /*@__PURE__*/ S.suspend(() =>
-  S.Union([MessagePlatformDataTwitter, MessagePlatformDataLinkedin, MessagePlatformDataOther]),
+  S.Union([
+    MessagePlatformDataTwitter,
+    MessagePlatformDataLinkedin,
+    MessagePlatformDataWhatsapp,
+    MessagePlatformDataTelegram,
+    MessagePlatformDataOther,
+  ]),
 ).annotate({ identifier: "MessagePlatformData" }) as any as S.Schema<M.MessagePlatformData>;
 
 export type MessagePlatformDataTwitter = M.MessagePlatformDataTwitter;
@@ -1321,6 +1555,24 @@ export const MessagePlatformDataLinkedin = /*@__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "MessagePlatformDataLinkedin",
 }) as any as S.Schema<M.MessagePlatformDataLinkedin>;
+
+export type MessagePlatformDataWhatsapp = M.MessagePlatformDataWhatsapp;
+export const MessagePlatformDataWhatsapp = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    _tag: S.Literal("whatsapp"),
+  }),
+).annotate({
+  identifier: "MessagePlatformDataWhatsapp",
+}) as any as S.Schema<M.MessagePlatformDataWhatsapp>;
+
+export type MessagePlatformDataTelegram = M.MessagePlatformDataTelegram;
+export const MessagePlatformDataTelegram = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    _tag: S.Literal("telegram"),
+  }),
+).annotate({
+  identifier: "MessagePlatformDataTelegram",
+}) as any as S.Schema<M.MessagePlatformDataTelegram>;
 
 export type MessagePlatformDataOther = M.MessagePlatformDataOther;
 export const MessagePlatformDataOther = /*@__PURE__*/ S.suspend(() =>
@@ -1463,6 +1715,95 @@ export const SendRequestTargetProfileByUsername = /*@__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "SendRequestTargetProfileByUsername",
 }) as any as S.Schema<M.SendRequestTargetProfileByUsername>;
+
+export type SendRich = M.SendRich;
+export const SendRich = /*@__PURE__*/ S.suspend(() =>
+  S.Union([SendRichPoll, SendRichEvent, SendRichContacts, SendRichLocation]),
+).annotate({ identifier: "SendRich" }) as any as S.Schema<M.SendRich>;
+
+export type SendRichPoll = M.SendRichPoll;
+export const SendRichPoll = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("poll"),
+    question: S.String,
+    options: S.Array(S.String),
+    multiple: S.optional(S.Boolean),
+  }),
+).annotate({ identifier: "SendRichPoll" }) as any as S.Schema<M.SendRichPoll>;
+
+export type SendRichEvent = M.SendRichEvent;
+export const SendRichEvent = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("event"),
+    name: S.String,
+    startsAt: S.String,
+    endsAt: S.optional(S.String),
+    description: S.optional(S.String),
+    location: S.optional(S.String),
+    joinLink: S.optional(S.String),
+  }),
+).annotate({ identifier: "SendRichEvent" }) as any as S.Schema<M.SendRichEvent>;
+
+export type SendRichContacts = M.SendRichContacts;
+export const SendRichContacts = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("contacts"),
+    contacts: S.Array(SendContact),
+  }),
+).annotate({ identifier: "SendRichContacts" }) as any as S.Schema<M.SendRichContacts>;
+
+export type SendContact = M.SendContact;
+export const SendContact = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    name: S.String,
+    phones: S.Array(SendContactPhonesItem),
+    emails: S.optional(S.Array(S.String)),
+    organization: S.optional(S.String),
+    title: S.optional(S.String),
+    addresses: S.optional(S.Array(SendContactAddressesItem)),
+    urls: S.optional(S.Array(S.String)),
+    birthday: S.optional(S.String),
+  }),
+).annotate({ identifier: "SendContact" }) as any as S.Schema<M.SendContact>;
+
+export type SendContactPhonesItem = M.SendContactPhonesItem;
+export const SendContactPhonesItem = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    number: S.String,
+    label: S.optional(S.String),
+  }),
+).annotate({ identifier: "SendContactPhonesItem" }) as any as S.Schema<M.SendContactPhonesItem>;
+
+export type SendContactAddressesItem = M.SendContactAddressesItem;
+export const SendContactAddressesItem = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    value: S.String,
+    label: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "SendContactAddressesItem",
+}) as any as S.Schema<M.SendContactAddressesItem>;
+
+export type SendRichLocation = M.SendRichLocation;
+export const SendRichLocation = /*@__PURE__*/ S.suspend(() =>
+  S.Struct({
+    type: S.Literal("location"),
+    latitude: S.Number,
+    longitude: S.Number,
+    name: S.optional(S.String),
+    address: S.optional(S.String),
+  }),
+).annotate({ identifier: "SendRichLocation" }) as any as S.Schema<M.SendRichLocation>;
+
+export type SendRequestRoute = M.SendRequestRoute;
+export const SendRequestRoute = /*@__PURE__*/ S.Literals([
+  "inmail",
+  "sponsored",
+  "offer",
+  "sms",
+  "bot",
+  "salesNavigator",
+]) as any as S.Schema<M.SendRequestRoute>;
 
 export type SendInProgressDetails = M.SendInProgressDetails;
 export const SendInProgressDetails = /*@__PURE__*/ S.suspend(() =>

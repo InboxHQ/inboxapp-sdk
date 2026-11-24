@@ -17,6 +17,26 @@ export class Threads {
    */
   readonly list: PaginatedMethod<T.ThreadsListRequest, T.ThreadPage, T.Thread>;
   /**
+   * Search threads
+   *
+   * The threads that best match `q`, most relevant first, in one page. Use it to find a conversation by a person's name or username; to page through the best 1,000 matches in inbox order, use `q` on List threads.
+   *
+   * `GET /threads/search`
+   *
+   * @throws {ThreadsSearchError}
+   */
+  readonly search: Method<T.ThreadsSearchRequest, T.ThreadSearchPage>;
+  /**
+   * Count threads
+   *
+   * How many threads the filters match, as the search index counts them; a thread changed in the last moments may be counted as it was. Use it to size a folder before paging through it.
+   *
+   * `GET /threads/count`
+   *
+   * @throws {ThreadsCountError}
+   */
+  readonly count: Method<T.ThreadsCountRequest, T.ThreadCount>;
+  /**
    * Get thread
    *
    * `GET /threads/{threadId}`
@@ -55,6 +75,8 @@ export class Threads {
 
   constructor(transport: Transport) {
     this.list = transport.paginated(Operations.threadsList);
+    this.search = transport.method(Operations.threadsSearch);
+    this.count = transport.method(Operations.threadsCount);
     this.get = transport.method(Operations.threadsGet);
     this.update = transport.method(Operations.threadsUpdate);
     this.delete = transport.method(Operations.threadsDelete);

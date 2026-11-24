@@ -227,6 +227,43 @@ export class PlatformUnavailable
     [{ code: "platformUnavailable" }],
   ) {}
 
+/** `403 memberRequired` */
+export class MemberRequired
+  extends /*@__PURE__*/ T.applyErrorMatchers(
+    /*@__PURE__*/ Schema.TaggedError<MemberRequired>()("MemberRequired", {
+      code: Schema.Literal("memberRequired"),
+      message: Schema.String,
+      details: Details<M.MemberRequiredDetails>(),
+      requestId: Schema.String,
+    }).pipe(Category.withAuthError),
+    [{ code: "memberRequired" }],
+  ) {}
+
+/** `404 viewNotFound` */
+export class ViewNotFound
+  extends /*@__PURE__*/ T.applyErrorMatchers(
+    /*@__PURE__*/ Schema.TaggedError<ViewNotFound>()("ViewNotFound", {
+      code: Schema.Literal("viewNotFound"),
+      message: Schema.String,
+      details: Details<null>(),
+      requestId: Schema.String,
+    }).pipe(Category.withNotFoundError),
+    [{ code: "viewNotFound" }],
+  ) {}
+
+/** `503 searchUnavailable` */
+export class SearchUnavailable
+  extends /*@__PURE__*/ T.applyErrorMatchers(
+    /*@__PURE__*/ Schema.TaggedError<SearchUnavailable>()("SearchUnavailable", {
+      code: Schema.Literal("searchUnavailable"),
+      message: Schema.String,
+      details: Details<null>(),
+      requestId: Schema.String,
+      retryAfter: Schema.optional(DurationSchema),
+    }).pipe(Category.withServerError, Category.withRetryable()),
+    [{ code: "searchUnavailable" }],
+  ) {}
+
 /** `404 threadNotFound` */
 export class ThreadNotFound
   extends /*@__PURE__*/ T.applyErrorMatchers(
